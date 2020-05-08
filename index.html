@@ -1,2 +1,58 @@
-<html><head><title>html!</title></head>
-<body><h1>fix it ted</h1></body></html>
+<html>
+    <head>
+        <style>
+        .parent {
+          position: relative;
+        }
+        .child {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .noun {
+            font-size: larger;
+        }
+        </style>
+        <title>
+            Recruiting Email Subject Generator
+        </title>
+    </head>
+    <body class="parent">
+        <h1 class="child">Are you the <span class="noun" id="person">Hannah Montana</span> of <span class="noun" id="tech">yaml</span>?</h1>
+    </body>
+    <script>
+        const values = {
+            person: [
+                "Hannah Montana",
+                "Mary Poppins",
+                "Samuel Jackson",
+                "Freddy Krueger",
+                "Mike Tyson",
+                "Donald Trump",
+                "Tom Brady",
+                "Bruce Lee",
+                "Travis Kalanick",
+                "Softbank"
+            ],
+            tech: [
+                "git",
+                "YAML",
+                "javascript",
+                "golang",
+                "googling",
+                "VSCode",
+                "Emacs",
+                "AWS",
+                "HTTP",
+                "Thrift",
+                "CSS",
+                "XML"
+            ]
+        };
+
+        ["person", "tech"].forEach(function (n) {
+            document.getElementById(n).textContent = values[n][Math.floor(Math.random() * values[n].length)];
+        });
+    </script>
+</html>
