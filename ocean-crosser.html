@@ -308,7 +308,7 @@
         let userLocation = null;
         let currentHeading = 0;
         let isCompassActive = false;
-        let debugMode = false; // Set to true to see debug info
+        let debugMode = true; // Set to true to see debug info
 
         // DOM elements
         const statusEl = document.getElementById('status');
@@ -412,7 +412,8 @@
                     return;
                 }
 
-                statusEl.textContent = 'Getting your location...';
+                statusEl.textContent = 'Requesting location permission...';
+                log('Requesting geolocation permission');
 
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -420,13 +421,21 @@
                             lat: position.coords.latitude,
                             lon: position.coords.longitude
                         };
-                        log(`Location: ${userLocation.lat}, ${userLocation.lon}`);
+                        log(`Location granted: ${userLocation.lat.toFixed(4)}, ${userLocation.lon.toFixed(4)}`);
                         statusEl.textContent = 'Location acquired';
                         resolve(userLocation);
                     },
                     (error) => {
-                        log(`Geolocation error: ${error.message}`);
-                        statusEl.innerHTML = '<span class="error">Location access denied</span>';
+                        log(`Geolocation error: ${error.code} - ${error.message}`);
+                        let errorMsg = 'Location access denied';
+                        if (error.code === 1) {
+                            errorMsg = 'Location permission denied by user';
+                        } else if (error.code === 2) {
+                            errorMsg = 'Location unavailable';
+                        } else if (error.code === 3) {
+                            errorMsg = 'Location request timed out';
+                        }
+                        statusEl.innerHTML = `<span class="error">${errorMsg}</span>`;
                         reject(error);
                     },
                     {
@@ -439,8 +448,15 @@
         }
 
         // Handle device orientation
+        let orientationEventCount = 0;
         function handleOrientation(event) {
             if (!isCompassActive || !userLocation) return;
+
+            // Log first event for debugging
+            if (orientationEventCount === 0) {
+                log(`First orientation event received - alpha: ${event.alpha}, beta: ${event.beta}, gamma: ${event.gamma}, webkitCompassHeading: ${event.webkitCompassHeading}`);
+            }
+            orientationEventCount++;
 
             // Get compass heading
             let heading = null;
@@ -448,20 +464,30 @@
             if (event.webkitCompassHeading !== undefined) {
                 // iOS
                 heading = event.webkitCompassHeading;
+                if (orientationEventCount === 1) log('Using iOS webkitCompassHeading');
             } else if (event.alpha !== null) {
                 // Android
                 heading = 360 - event.alpha;
+                if (orientationEventCount === 1) log('Using Android alpha orientation');
             }
 
             if (heading !== null) {
                 currentHeading = Math.round(heading);
                 updateDisplay(currentHeading);
+            } else {
+                if (orientationEventCount === 1) log('Warning: No valid heading data available');
             }
         }
 
         // Handle device orientation for Android (alternative method)
+        let absoluteEventCount = 0;
         function handleOrientationAbsolute(event) {
             if (!isCompassActive || !userLocation) return;
+
+            if (absoluteEventCount === 0) {
+                log(`First absolute orientation event - absolute: ${event.absolute}, alpha: ${event.alpha}`);
+            }
+            absoluteEventCount++;
 
             if (event.absolute && event.alpha !== null) {
                 currentHeading = Math.round(360 - event.alpha);
@@ -502,18 +528,25 @@
             if (typeof DeviceOrientationEvent !== 'undefined' &&
                 typeof DeviceOrientationEvent.requestPermission === 'function') {
                 try {
+                    log('iOS detected - requesting DeviceOrientation permission');
+                    statusEl.textContent = 'Requesting compass permission...';
                     const permission = await DeviceOrientationEvent.requestPermission();
+                    log(`Permission response: ${permission}`);
                     if (permission === 'granted') {
+                        log('Compass permission granted');
                         return true;
                     } else {
+                        log('Compass permission denied');
                         statusEl.innerHTML = '<span class="error">Compass permission denied</span>';
                         return false;
                     }
                 } catch (error) {
-                    log(`Permission error: ${error}`);
+                    log(`Permission error: ${error.toString()}`);
+                    statusEl.innerHTML = `<span class="error">Permission error: ${error.message}</span>`;
                     return false;
                 }
             }
+            log('Android/Desktop - no permission request needed');
             return true; // No permission needed (Android, older iOS)
         }
 
@@ -522,29 +555,52 @@
             try {
                 startBtn.disabled = true;
                 startBtn.textContent = 'Starting...';
+                log('=== Starting compass initialization ===');
+
+                // Check for HTTPS (required for sensors on most browsers)
+                if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    log(`WARNING: Running on ${location.protocol} - Many browsers require HTTPS for sensor access`);
+                    statusEl.innerHTML = '<span class="error">HTTPS required for sensors</span>';
+                }
 
                 // Get location first
+                log('Step 1: Requesting location');
                 await getUserLocation();
+                log('Step 1: Complete');
 
                 // Request orientation permission if needed
+                log('Step 2: Requesting orientation permission');
                 const permissionGranted = await requestOrientationPermission();
                 if (!permissionGranted) {
                     startBtn.disabled = false;
                     startBtn.textContent = 'Enable Compass';
+                    log('Permission denied - stopping');
                     return;
                 }
+                log('Step 2: Complete');
 
                 // Add orientation listeners
-                window.addEventListener('deviceorientation', handleOrientation);
-                window.addEventListener('deviceorientationabsolute', handleOrientationAbsolute);
+                log('Step 3: Adding event listeners');
+                window.addEventListener('deviceorientation', handleOrientation, true);
+                window.addEventListener('deviceorientationabsolute', handleOrientationAbsolute, true);
+                log('Event listeners added');
 
                 isCompassActive = true;
                 statusEl.textContent = 'Compass active - Point at the horizon';
                 startBtn.textContent = 'Compass Active';
 
-                log('Compass started successfully');
+                log('=== Compass started successfully - waiting for orientation events ===');
+
+                // Set a timeout to check if we're receiving events
+                setTimeout(() => {
+                    if (orientationEventCount === 0 && absoluteEventCount === 0) {
+                        log('WARNING: No orientation events received after 3 seconds');
+                        statusEl.innerHTML = '<span class="error">No sensor data - try moving your device</span>';
+                    }
+                }, 3000);
+
             } catch (error) {
-                log(`Error starting compass: ${error.message}`);
+                log(`Error starting compass: ${error.toString()}`);
                 statusEl.innerHTML = `<span class="error">Error: ${error.message}</span>`;
                 startBtn.disabled = false;
                 startBtn.textContent = 'Enable Compass';
@@ -554,19 +610,35 @@
         // Initialize
         startBtn.addEventListener('click', startCompass);
 
+        // Check environment and log details
+        log('=== Ocean Crosser Initialization ===');
+        log(`Protocol: ${location.protocol}`);
+        log(`User Agent: ${navigator.userAgent}`);
+        log(`Geolocation supported: ${!!navigator.geolocation}`);
+        log(`DeviceOrientation supported: ${!!window.DeviceOrientationEvent}`);
+        log(`DeviceOrientation.requestPermission exists: ${!!(window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function')}`);
+
         // Check for required APIs
         if (!navigator.geolocation) {
+            log('ERROR: Geolocation not supported');
             statusEl.innerHTML = '<span class="error">Geolocation not supported</span>';
             startBtn.disabled = true;
-        }
-
-        if (!window.DeviceOrientationEvent) {
-            statusEl.innerHTML = '<span class="error">Device orientation not supported</span>';
+        } else if (!window.DeviceOrientationEvent) {
+            log('ERROR: Device orientation not supported');
+            statusEl.innerHTML = '<span class="error">Device orientation not supported - Use a mobile device</span>';
             startBtn.disabled = true;
+        } else {
+            log('All required APIs available');
+            statusEl.textContent = 'Ready to start - Tap button to begin';
         }
 
-        log('Ocean Crosser initialized');
-        statusEl.textContent = 'Ready to start';
+        // Add helpful hints
+        if (location.protocol === 'file:') {
+            log('WARNING: Running from file:// - This may not work. Use a web server.');
+            statusEl.innerHTML = '<span class="error">Must be served via HTTP/HTTPS</span>';
+        }
+
+        log('=== Initialization complete ===');
     </script>
 </body>
 </html>
