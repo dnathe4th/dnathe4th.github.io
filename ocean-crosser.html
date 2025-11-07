@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ocean Crosser - What's Across the Water?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #4A90E2 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        #container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        #header {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        #header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        #status {
+            font-size: 14px;
+            color: #FFD700;
+        }
+
+        #compass-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #compass {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 5px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            transition: transform 0.1s ease-out;
+        }
+
+        #compass-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 120px solid #FF4444;
+            transition: transform 0.1s ease-out;
+        }
+
+        #compass-arrow::after {
+            content: '';
+            position: absolute;
+            top: 120px;
+            left: -20px;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 120px solid #FFFFFF;
+        }
+
+        .compass-label {
+            position: absolute;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+        }
+
+        .compass-label.n { top: 10px; left: 50%; transform: translateX(-50%); }
+        .compass-label.e { right: 10px; top: 50%; transform: translateY(-50%); }
+        .compass-label.s { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .compass-label.w { left: 10px; top: 50%; transform: translateY(-50%); }
+
+        #heading-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        #destination {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #destination-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        #destination-details {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        #controls {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #FF6B6B;
+        }
+
+        #debug {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1>🌊 Ocean Crosser</h1>
+            <div id="status">Initializing...</div>
+        </div>
+
+        <div id="compass-container">
+            <div id="compass">
+                <div class="compass-label n">N</div>
+                <div class="compass-label e">E</div>
+                <div class="compass-label s">S</div>
+                <div class="compass-label w">W</div>
+                <div id="compass-arrow"></div>
+                <div id="heading-display">--°</div>
+            </div>
+        </div>
+
+        <div id="destination">
+            <div id="destination-name">Point your phone at the horizon</div>
+            <div id="destination-details">
+                <div id="distance">--</div>
+                <div id="location-info">--</div>
+            </div>
+        </div>
+
+        <div id="controls">
+            <button id="start-btn">Enable Compass</button>
+        </div>
+    </div>
+
+    <div id="debug" style="display: none;"></div>
+
+    <script>
+        // Comprehensive dataset of major coastal cities and landmarks
+        const COASTAL_DESTINATIONS = [
+            // North America - East Coast
+            { name: "New York City, USA", lat: 40.7128, lon: -74.0060, country: "USA" },
+            { name: "Miami, USA", lat: 25.7617, lon: -80.1918, country: "USA" },
+            { name: "Boston, USA", lat: 42.3601, lon: -71.0589, country: "USA" },
+            { name: "Charleston, USA", lat: 32.7765, lon: -79.9311, country: "USA" },
+            { name: "Halifax, Canada", lat: 44.6488, lon: -63.5752, country: "Canada" },
+
+            // North America - West Coast
+            { name: "Los Angeles, USA", lat: 34.0522, lon: -118.2437, country: "USA" },
+            { name: "San Francisco, USA", lat: 37.7749, lon: -122.4194, country: "USA" },
+            { name: "Seattle, USA", lat: 47.6062, lon: -122.3321, country: "USA" },
+            { name: "Vancouver, Canada", lat: 49.2827, lon: -123.1207, country: "Canada" },
+            { name: "San Diego, USA", lat: 32.7157, lon: -117.1611, country: "USA" },
+
+            // Central/South America
+            { name: "Cancún, Mexico", lat: 21.1619, lon: -86.8515, country: "Mexico" },
+            { name: "Rio de Janeiro, Brazil", lat: -22.9068, lon: -43.1729, country: "Brazil" },
+            { name: "Buenos Aires, Argentina", lat: -34.6037, lon: -58.3816, country: "Argentina" },
+            { name: "Lima, Peru", lat: -12.0464, lon: -77.0428, country: "Peru" },
+            { name: "Cartagena, Colombia", lat: 10.3910, lon: -75.4794, country: "Colombia" },
+            { name: "Valparaíso, Chile", lat: -33.0472, lon: -71.6127, country: "Chile" },
+
+            // Europe - West
+            { name: "Lisbon, Portugal", lat: 38.7223, lon: -9.1393, country: "Portugal" },
+            { name: "London, UK", lat: 51.5074, lon: -0.1278, country: "UK" },
+            { name: "Dublin, Ireland", lat: 53.3498, lon: -6.2603, country: "Ireland" },
+            { name: "Amsterdam, Netherlands", lat: 52.3676, lon: 4.9041, country: "Netherlands" },
+            { name: "Barcelona, Spain", lat: 41.3851, lon: 2.1734, country: "Spain" },
+            { name: "Marseille, France", lat: 43.2965, lon: 5.3698, country: "France" },
+            { name: "Nice, France", lat: 43.7102, lon: 7.2620, country: "France" },
+            { name: "Reykjavik, Iceland", lat: 64.1466, lon: -21.9426, country: "Iceland" },
+
+            // Europe - Mediterranean
+            { name: "Rome, Italy", lat: 41.9028, lon: 12.4964, country: "Italy" },
+            { name: "Athens, Greece", lat: 37.9838, lon: 23.7275, country: "Greece" },
+            { name: "Istanbul, Turkey", lat: 41.0082, lon: 28.9784, country: "Turkey" },
+            { name: "Venice, Italy", lat: 45.4408, lon: 12.3155, country: "Italy" },
+
+            // Africa
+            { name: "Casablanca, Morocco", lat: 33.5731, lon: -7.5898, country: "Morocco" },
+            { name: "Lagos, Nigeria", lat: 6.5244, lon: 3.3792, country: "Nigeria" },
+            { name: "Cape Town, South Africa", lat: -33.9249, lon: 18.4241, country: "South Africa" },
+            { name: "Alexandria, Egypt", lat: 31.2001, lon: 29.9187, country: "Egypt" },
+            { name: "Dakar, Senegal", lat: 14.7167, lon: -17.4677, country: "Senegal" },
+            { name: "Mombasa, Kenya", lat: -4.0435, lon: 39.6682, country: "Kenya" },
+
+            // Middle East
+            { name: "Dubai, UAE", lat: 25.2048, lon: 55.2708, country: "UAE" },
+            { name: "Tel Aviv, Israel", lat: 32.0853, lon: 34.7818, country: "Israel" },
+            { name: "Beirut, Lebanon", lat: 33.8938, lon: 35.5018, country: "Lebanon" },
+
+            // Asia - East
+            { name: "Tokyo, Japan", lat: 35.6762, lon: 139.6503, country: "Japan" },
+            { name: "Shanghai, China", lat: 31.2304, lon: 121.4737, country: "China" },
+            { name: "Hong Kong", lat: 22.3193, lon: 114.1694, country: "Hong Kong" },
+            { name: "Seoul, South Korea", lat: 37.5665, lon: 126.9780, country: "South Korea" },
+            { name: "Osaka, Japan", lat: 34.6937, lon: 135.5023, country: "Japan" },
+            { name: "Manila, Philippines", lat: 14.5995, lon: 120.9842, country: "Philippines" },
+
+            // Asia - Southeast
+            { name: "Singapore", lat: 1.3521, lon: 103.8198, country: "Singapore" },
+            { name: "Bangkok, Thailand", lat: 13.7563, lon: 100.5018, country: "Thailand" },
+            { name: "Ho Chi Minh City, Vietnam", lat: 10.8231, lon: 106.6297, country: "Vietnam" },
+            { name: "Jakarta, Indonesia", lat: -6.2088, lon: 106.8456, country: "Indonesia" },
+            { name: "Bali, Indonesia", lat: -8.4095, lon: 115.1889, country: "Indonesia" },
+
+            // Asia - South
+            { name: "Mumbai, India", lat: 19.0760, lon: 72.8777, country: "India" },
+            { name: "Chennai, India", lat: 13.0827, lon: 80.2707, country: "India" },
+            { name: "Colombo, Sri Lanka", lat: 6.9271, lon: 79.8612, country: "Sri Lanka" },
+            { name: "Karachi, Pakistan", lat: 24.8607, lon: 67.0011, country: "Pakistan" },
+
+            // Oceania
+            { name: "Sydney, Australia", lat: -33.8688, lon: 151.2093, country: "Australia" },
+            { name: "Melbourne, Australia", lat: -37.8136, lon: 144.9631, country: "Australia" },
+            { name: "Perth, Australia", lat: -31.9505, lon: 115.8605, country: "Australia" },
+            { name: "Auckland, New Zealand", lat: -36.8485, lon: 174.7633, country: "New Zealand" },
+            { name: "Wellington, New Zealand", lat: -41.2865, lon: 174.7762, country: "New Zealand" },
+
+            // Pacific Islands
+            { name: "Honolulu, Hawaii", lat: 21.3099, lon: -157.8581, country: "USA" },
+            { name: "Papeete, Tahiti", lat: -17.5516, lon: -149.5585, country: "French Polynesia" },
+            { name: "Fiji", lat: -17.7134, lon: 178.0650, country: "Fiji" },
+
+            // Caribbean
+            { name: "Havana, Cuba", lat: 23.1136, lon: -82.3666, country: "Cuba" },
+            { name: "San Juan, Puerto Rico", lat: 18.4655, lon: -66.1057, country: "Puerto Rico" },
+            { name: "Kingston, Jamaica", lat: 17.9714, lon: -76.7931, country: "Jamaica" },
+
+            // Arctic/Northern
+            { name: "Murmansk, Russia", lat: 68.9585, lon: 33.0827, country: "Russia" },
+            { name: "Anchorage, Alaska", lat: 61.2181, lon: -149.9003, country: "USA" },
+
+            // Antarctica
+            { name: "Antarctica (Palmer Station)", lat: -64.7744, lon: -64.0489, country: "Antarctica" },
+            { name: "Antarctica (McMurdo)", lat: -77.8463, lon: 166.6686, country: "Antarctica" }
+        ];
+
+        // State
+        let userLocation = null;
+        let currentHeading = 0;
+        let isCompassActive = false;
+        let debugMode = false; // Set to true to see debug info
+
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const headingDisplayEl = document.getElementById('heading-display');
+        const compassArrowEl = document.getElementById('compass-arrow');
+        const destinationNameEl = document.getElementById('destination-name');
+        const distanceEl = document.getElementById('distance');
+        const locationInfoEl = document.getElementById('location-info');
+        const startBtn = document.getElementById('start-btn');
+        const debugEl = document.getElementById('debug');
+
+        if (debugMode) {
+            debugEl.style.display = 'block';
+        }
+
+        // Utility functions
+        function log(message) {
+            console.log(message);
+            if (debugMode) {
+                debugEl.innerHTML += `${new Date().toLocaleTimeString()}: ${message}<br>`;
+                debugEl.scrollTop = debugEl.scrollHeight;
+            }
+        }
+
+        function toRadians(degrees) {
+            return degrees * Math.PI / 180;
+        }
+
+        function toDegrees(radians) {
+            return radians * 180 / Math.PI;
+        }
+
+        // Calculate distance between two points using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = toRadians(lat2 - lat1);
+            const dLon = toRadians(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // Calculate initial bearing from point A to point B
+        function calculateBearing(lat1, lon1, lat2, lon2) {
+            const dLon = toRadians(lon2 - lon1);
+            const y = Math.sin(dLon) * Math.cos(toRadians(lat2));
+            const x = Math.cos(toRadians(lat1)) * Math.sin(toRadians(lat2)) -
+                      Math.sin(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.cos(dLon);
+            let bearing = toDegrees(Math.atan2(y, x));
+            return (bearing + 360) % 360; // Normalize to 0-360
+        }
+
+        // Find the closest destination in a given direction
+        function findDestinationInDirection(userLat, userLon, heading) {
+            let bestMatch = null;
+            let smallestAngleDiff = 180;
+            const toleranceAngle = 30; // degrees of tolerance
+
+            COASTAL_DESTINATIONS.forEach(dest => {
+                const bearing = calculateBearing(userLat, userLon, dest.lat, dest.lon);
+                let angleDiff = Math.abs(bearing - heading);
+
+                // Handle angle wrapping (e.g., 359° vs 1°)
+                if (angleDiff > 180) {
+                    angleDiff = 360 - angleDiff;
+                }
+
+                // Only consider destinations within tolerance and closer than current best
+                if (angleDiff < toleranceAngle && angleDiff < smallestAngleDiff) {
+                    smallestAngleDiff = angleDiff;
+                    bestMatch = {
+                        ...dest,
+                        bearing: bearing,
+                        distance: calculateDistance(userLat, userLon, dest.lat, dest.lon),
+                        angleDiff: angleDiff
+                    };
+                }
+            });
+
+            return bestMatch;
+        }
+
+        // Format distance for display
+        function formatDistance(km) {
+            if (km < 1) {
+                return `${Math.round(km * 1000)} meters`;
+            } else if (km < 100) {
+                return `${km.toFixed(1)} km`;
+            } else {
+                return `${Math.round(km)} km (${Math.round(km * 0.621371)} miles)`;
+            }
+        }
+
+        // Get user's location
+        function getUserLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+
+                statusEl.textContent = 'Getting your location...';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude
+                        };
+                        log(`Location: ${userLocation.lat}, ${userLocation.lon}`);
+                        statusEl.textContent = 'Location acquired';
+                        resolve(userLocation);
+                    },
+                    (error) => {
+                        log(`Geolocation error: ${error.message}`);
+                        statusEl.innerHTML = '<span class="error">Location access denied</span>';
+                        reject(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        // Handle device orientation
+        function handleOrientation(event) {
+            if (!isCompassActive || !userLocation) return;
+
+            // Get compass heading
+            let heading = null;
+
+            if (event.webkitCompassHeading !== undefined) {
+                // iOS
+                heading = event.webkitCompassHeading;
+            } else if (event.alpha !== null) {
+                // Android
+                heading = 360 - event.alpha;
+            }
+
+            if (heading !== null) {
+                currentHeading = Math.round(heading);
+                updateDisplay(currentHeading);
+            }
+        }
+
+        // Handle device orientation for Android (alternative method)
+        function handleOrientationAbsolute(event) {
+            if (!isCompassActive || !userLocation) return;
+
+            if (event.absolute && event.alpha !== null) {
+                currentHeading = Math.round(360 - event.alpha);
+                updateDisplay(currentHeading);
+            }
+        }
+
+        // Update display with current heading
+        function updateDisplay(heading) {
+            // Update compass arrow rotation
+            compassArrowEl.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+
+            // Update heading display
+            headingDisplayEl.textContent = `${heading}°`;
+
+            // Find destination in this direction
+            const destination = findDestinationInDirection(
+                userLocation.lat,
+                userLocation.lon,
+                heading
+            );
+
+            if (destination) {
+                destinationNameEl.textContent = destination.name;
+                distanceEl.textContent = `${formatDistance(destination.distance)} away`;
+                locationInfoEl.textContent = `Bearing: ${Math.round(destination.bearing)}° | Match: ${(30 - destination.angleDiff).toFixed(0)}% accuracy`;
+                statusEl.textContent = 'Tracking...';
+            } else {
+                destinationNameEl.textContent = 'Open Ocean';
+                distanceEl.textContent = 'No major landmass in this direction';
+                locationInfoEl.textContent = 'Try pointing in a different direction';
+                statusEl.textContent = 'No destination found';
+            }
+        }
+
+        // Request device orientation permission (iOS 13+)
+        async function requestOrientationPermission() {
+            if (typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        return true;
+                    } else {
+                        statusEl.innerHTML = '<span class="error">Compass permission denied</span>';
+                        return false;
+                    }
+                } catch (error) {
+                    log(`Permission error: ${error}`);
+                    return false;
+                }
+            }
+            return true; // No permission needed (Android, older iOS)
+        }
+
+        // Start compass
+        async function startCompass() {
+            try {
+                startBtn.disabled = true;
+                startBtn.textContent = 'Starting...';
+
+                // Get location first
+                await getUserLocation();
+
+                // Request orientation permission if needed
+                const permissionGranted = await requestOrientationPermission();
+                if (!permissionGranted) {
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Enable Compass';
+                    return;
+                }
+
+                // Add orientation listeners
+                window.addEventListener('deviceorientation', handleOrientation);
+                window.addEventListener('deviceorientationabsolute', handleOrientationAbsolute);
+
+                isCompassActive = true;
+                statusEl.textContent = 'Compass active - Point at the horizon';
+                startBtn.textContent = 'Compass Active';
+
+                log('Compass started successfully');
+            } catch (error) {
+                log(`Error starting compass: ${error.message}`);
+                statusEl.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                startBtn.disabled = false;
+                startBtn.textContent = 'Enable Compass';
+            }
+        }
+
+        // Initialize
+        startBtn.addEventListener('click', startCompass);
+
+        // Check for required APIs
+        if (!navigator.geolocation) {
+            statusEl.innerHTML = '<span class="error">Geolocation not supported</span>';
+            startBtn.disabled = true;
+        }
+
+        if (!window.DeviceOrientationEvent) {
+            statusEl.innerHTML = '<span class="error">Device orientation not supported</span>';
+            startBtn.disabled = true;
+        }
+
+        log('Ocean Crosser initialized');
+        statusEl.textContent = 'Ready to start';
+    </script>
+</body>
+</html>
