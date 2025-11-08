@@ -149,6 +149,23 @@
             color: #FFD700;
         }
 
+        #sensor-debug {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 150;
+            max-width: 200px;
+        }
+
+        #sensor-debug div {
+            margin: 2px 0;
+        }
+
         #destination {
             background: rgba(0, 0, 0, 0.5);
             padding: 20px;
@@ -225,6 +242,15 @@
 
         <div id="compass-container">
             <div id="compass">
+                <div id="sensor-debug" style="display: none;">
+                    <div><strong>Raw Sensors:</strong></div>
+                    <div id="sensor-alpha">α: --</div>
+                    <div id="sensor-beta">β: --</div>
+                    <div id="sensor-gamma">γ: --</div>
+                    <div id="sensor-absolute">Absolute: --</div>
+                    <div id="sensor-webkit">WebKit: --</div>
+                    <div id="sensor-calculated">Calc: --</div>
+                </div>
                 <div id="heading-display">--°</div>
                 <div id="crosshair"></div>
                 <div id="compass-strip">
@@ -366,9 +392,17 @@
         const locationInfoEl = document.getElementById('location-info');
         const startBtn = document.getElementById('start-btn');
         const debugEl = document.getElementById('debug');
+        const sensorDebugEl = document.getElementById('sensor-debug');
+        const sensorAlphaEl = document.getElementById('sensor-alpha');
+        const sensorBetaEl = document.getElementById('sensor-beta');
+        const sensorGammaEl = document.getElementById('sensor-gamma');
+        const sensorAbsoluteEl = document.getElementById('sensor-absolute');
+        const sensorWebkitEl = document.getElementById('sensor-webkit');
+        const sensorCalculatedEl = document.getElementById('sensor-calculated');
 
         if (debugMode) {
             debugEl.style.display = 'block';
+            sensorDebugEl.style.display = 'block';
         }
 
         // Create compass tape with cardinal directions
@@ -533,10 +567,41 @@
             });
         }
 
+        // Calculate compass heading from device orientation for vertical phone position
+        function calculateCompassHeading(alpha, beta, gamma) {
+            // Convert to radians
+            const alphaRad = toRadians(alpha);
+            const betaRad = toRadians(beta);
+            const gammaRad = toRadians(gamma);
+
+            // Calculate compass heading accounting for device tilt
+            // This works when phone is held vertically (portrait mode)
+            const compassHeading = Math.atan2(
+                -Math.sin(gammaRad) * Math.cos(betaRad),
+                Math.cos(gammaRad) * Math.cos(betaRad) * Math.cos(alphaRad) +
+                Math.sin(betaRad) * Math.sin(alphaRad)
+            );
+
+            // Convert to degrees and normalize to 0-360
+            let heading = toDegrees(compassHeading);
+            heading = (heading + 360) % 360;
+
+            return heading;
+        }
+
         // Handle device orientation
         let orientationEventCount = 0;
         function handleOrientation(event) {
             if (!isCompassActive || !userLocation) return;
+
+            // Update sensor debug display
+            if (sensorDebugEl) {
+                sensorAlphaEl.textContent = `α: ${event.alpha !== null ? event.alpha.toFixed(1) : 'null'}°`;
+                sensorBetaEl.textContent = `β: ${event.beta !== null ? event.beta.toFixed(1) : 'null'}°`;
+                sensorGammaEl.textContent = `γ: ${event.gamma !== null ? event.gamma.toFixed(1) : 'null'}°`;
+                sensorAbsoluteEl.textContent = `Absolute: ${event.absolute ? 'yes' : 'no'}`;
+                sensorWebkitEl.textContent = `WebKit: ${event.webkitCompassHeading !== undefined ? event.webkitCompassHeading.toFixed(1) + '°' : 'n/a'}`;
+            }
 
             // Log first event for debugging
             if (orientationEventCount === 0) {
@@ -548,17 +613,28 @@
             let heading = null;
 
             if (event.webkitCompassHeading !== undefined) {
-                // iOS
+                // iOS - webkitCompassHeading is already calibrated
                 heading = event.webkitCompassHeading;
                 if (orientationEventCount === 1) log('Using iOS webkitCompassHeading');
-            } else if (event.alpha !== null) {
-                // Android
-                heading = 360 - event.alpha;
-                if (orientationEventCount === 1) log('Using Android alpha orientation');
+            } else if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
+                // Android - calculate heading from orientation data
+                // Check if phone is roughly vertical (beta between 45 and 135 degrees)
+                if (Math.abs(event.beta) > 45 && Math.abs(event.beta) < 135) {
+                    // Phone is vertical - use proper calculation
+                    heading = calculateCompassHeading(event.alpha, event.beta, event.gamma);
+                    if (orientationEventCount === 1) log('Using calculated heading for vertical orientation');
+                } else {
+                    // Phone is flat - use simple alpha
+                    heading = 360 - event.alpha;
+                    if (orientationEventCount === 1) log('Using simple alpha for flat orientation');
+                }
             }
 
             if (heading !== null) {
                 currentHeading = heading;
+                if (sensorDebugEl) {
+                    sensorCalculatedEl.textContent = `Calc: ${heading.toFixed(1)}°`;
+                }
                 // Apply smoothing to reduce jitter
                 smoothedHeading = orientationEventCount === 1 ? heading : smoothHeading(heading, smoothedHeading);
                 updateDisplay(Math.round(smoothedHeading));
@@ -573,12 +649,24 @@
             if (!isCompassActive || !userLocation) return;
 
             if (absoluteEventCount === 0) {
-                log(`First absolute orientation event - absolute: ${event.absolute}, alpha: ${event.alpha}`);
+                log(`First absolute orientation event - absolute: ${event.absolute}, alpha: ${event.alpha}, beta: ${event.beta}, gamma: ${event.gamma}`);
             }
             absoluteEventCount++;
 
-            if (event.absolute && event.alpha !== null) {
-                let heading = 360 - event.alpha;
+            if (event.absolute && event.alpha !== null && event.beta !== null && event.gamma !== null) {
+                let heading = null;
+
+                // Check if phone is roughly vertical (beta between 45 and 135 degrees)
+                if (Math.abs(event.beta) > 45 && Math.abs(event.beta) < 135) {
+                    // Phone is vertical - use proper calculation
+                    heading = calculateCompassHeading(event.alpha, event.beta, event.gamma);
+                    if (absoluteEventCount === 1) log('Using calculated heading for vertical orientation (absolute)');
+                } else {
+                    // Phone is flat - use simple alpha
+                    heading = 360 - event.alpha;
+                    if (absoluteEventCount === 1) log('Using simple alpha for flat orientation (absolute)');
+                }
+
                 currentHeading = heading;
                 // Apply smoothing to reduce jitter
                 smoothedHeading = absoluteEventCount === 1 ? heading : smoothHeading(heading, smoothedHeading);
@@ -681,10 +769,17 @@
                 log('Event listeners added');
 
                 isCompassActive = true;
-                statusEl.textContent = 'Compass active - Point at the horizon';
+                statusEl.innerHTML = 'Compass active - <span style="color: #FFD700;">Wave phone in figure-8 to calibrate</span>';
                 startBtn.textContent = 'Compass Active';
 
                 log('=== Compass started successfully - waiting for orientation events ===');
+
+                // Show calibration reminder after 2 seconds
+                setTimeout(() => {
+                    if (isCompassActive) {
+                        log('TIP: Wave your phone in a figure-8 pattern to calibrate the magnetometer');
+                    }
+                }, 2000);
 
                 // Set a timeout to check if we're receiving events
                 setTimeout(() => {
