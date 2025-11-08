@@ -135,17 +135,22 @@
             border-radius: 10px;
             text-align: center;
             margin-top: 10px;
+            margin-bottom: 160px;
+            position: relative;
+            z-index: 10;
         }
 
         button {
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 16px;
-            border-radius: 5px;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
             cursor: pointer;
             margin: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         button:disabled {
@@ -162,11 +167,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             padding: 10px;
-            font-size: 12px;
+            font-size: 11px;
             max-height: 150px;
             overflow-y: auto;
+            z-index: 5;
+            border-top: 2px solid #4CAF50;
         }
     </style>
 </head>
