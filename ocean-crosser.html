@@ -50,64 +50,103 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow: hidden;
         }
 
+        /* Horizon view - like looking at the ocean */
         #compass {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
-            border: 5px solid rgba(255, 255, 255, 0.8);
+            width: 100%;
+            height: 100%;
             position: relative;
-            transition: transform 0.1s ease-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        #compass-arrow {
+        /* Compass strip that scrolls horizontally */
+        #compass-strip {
             position: absolute;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(0deg);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-bottom: 120px solid #FF4444;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.6);
+            border-top: 2px solid rgba(255, 255, 255, 0.5);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #compass-tape {
+            display: flex;
+            position: absolute;
+            height: 100%;
             transition: transform 0.1s ease-out;
+            white-space: nowrap;
         }
 
-        #compass-arrow::after {
-            content: '';
-            position: absolute;
-            top: 120px;
-            left: -20px;
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 120px solid #FFFFFF;
-        }
-
-        .compass-label {
-            position: absolute;
+        .compass-mark {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
             font-weight: bold;
-            font-size: 20px;
-            color: white;
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .compass-label.n { top: 10px; left: 50%; transform: translateX(-50%); }
-        .compass-label.e { right: 10px; top: 50%; transform: translateY(-50%); }
-        .compass-label.s { bottom: 10px; left: 50%; transform: translateX(-50%); }
-        .compass-label.w { left: 10px; top: 50%; transform: translateY(-50%); }
+        .compass-mark.major {
+            font-size: 20px;
+            color: #FFD700;
+        }
 
-        #heading-display {
+        /* Center crosshair */
+        #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 48px;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: #FF4444;
+        }
+
+        #crosshair::before {
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            margin-left: -1.5px;
+        }
+
+        #crosshair::after {
+            top: 50%;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            margin-top: -1.5px;
+        }
+
+        #heading-display {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 64px;
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
             z-index: 10;
+            color: #FFD700;
         }
 
         #destination {
@@ -186,12 +225,11 @@
 
         <div id="compass-container">
             <div id="compass">
-                <div class="compass-label n">N</div>
-                <div class="compass-label e">E</div>
-                <div class="compass-label s">S</div>
-                <div class="compass-label w">W</div>
-                <div id="compass-arrow"></div>
                 <div id="heading-display">--°</div>
+                <div id="crosshair"></div>
+                <div id="compass-strip">
+                    <div id="compass-tape"></div>
+                </div>
             </div>
         </div>
 
@@ -314,13 +352,15 @@
         // State
         let userLocation = null;
         let currentHeading = 0;
+        let smoothedHeading = 0;
         let isCompassActive = false;
         let debugMode = true; // Set to true to see debug info
+        const SMOOTHING_FACTOR = 0.15; // Lower = smoother but slower response
 
         // DOM elements
         const statusEl = document.getElementById('status');
         const headingDisplayEl = document.getElementById('heading-display');
-        const compassArrowEl = document.getElementById('compass-arrow');
+        const compassTapeEl = document.getElementById('compass-tape');
         const destinationNameEl = document.getElementById('destination-name');
         const distanceEl = document.getElementById('distance');
         const locationInfoEl = document.getElementById('location-info');
@@ -330,6 +370,33 @@
         if (debugMode) {
             debugEl.style.display = 'block';
         }
+
+        // Create compass tape with cardinal directions
+        function createCompassTape() {
+            const directions = [
+                { deg: 0, label: 'N', major: true },
+                { deg: 45, label: 'NE', major: false },
+                { deg: 90, label: 'E', major: true },
+                { deg: 135, label: 'SE', major: false },
+                { deg: 180, label: 'S', major: true },
+                { deg: 225, label: 'SW', major: false },
+                { deg: 270, label: 'W', major: true },
+                { deg: 315, label: 'NW', major: false }
+            ];
+
+            // Create tape 3 times to allow seamless wrapping
+            for (let repeat = 0; repeat < 3; repeat++) {
+                directions.forEach(dir => {
+                    const mark = document.createElement('div');
+                    mark.className = dir.major ? 'compass-mark major' : 'compass-mark';
+                    mark.textContent = dir.label;
+                    mark.dataset.degree = dir.deg;
+                    compassTapeEl.appendChild(mark);
+                });
+            }
+        }
+
+        createCompassTape();
 
         // Utility functions
         function log(message) {
@@ -346,6 +413,18 @@
 
         function toDegrees(radians) {
             return radians * 180 / Math.PI;
+        }
+
+        // Smooth heading changes to reduce jitter
+        function smoothHeading(newHeading, oldHeading) {
+            // Handle angle wrapping (359° to 1° transition)
+            let diff = newHeading - oldHeading;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+
+            let smoothed = oldHeading + (diff * SMOOTHING_FACTOR);
+            smoothed = (smoothed + 360) % 360; // Normalize to 0-360
+            return smoothed;
         }
 
         // Calculate distance between two points using Haversine formula
@@ -479,8 +558,10 @@
             }
 
             if (heading !== null) {
-                currentHeading = Math.round(heading);
-                updateDisplay(currentHeading);
+                currentHeading = heading;
+                // Apply smoothing to reduce jitter
+                smoothedHeading = orientationEventCount === 1 ? heading : smoothHeading(heading, smoothedHeading);
+                updateDisplay(Math.round(smoothedHeading));
             } else {
                 if (orientationEventCount === 1) log('Warning: No valid heading data available');
             }
@@ -497,18 +578,25 @@
             absoluteEventCount++;
 
             if (event.absolute && event.alpha !== null) {
-                currentHeading = Math.round(360 - event.alpha);
-                updateDisplay(currentHeading);
+                let heading = 360 - event.alpha;
+                currentHeading = heading;
+                // Apply smoothing to reduce jitter
+                smoothedHeading = absoluteEventCount === 1 ? heading : smoothHeading(heading, smoothedHeading);
+                updateDisplay(Math.round(smoothedHeading));
             }
         }
 
         // Update display with current heading
         function updateDisplay(heading) {
-            // Update compass arrow rotation
-            compassArrowEl.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
-
             // Update heading display
             headingDisplayEl.textContent = `${heading}°`;
+
+            // Move compass tape (negative because we want the tape to move opposite of heading)
+            // 60px per direction mark, 8 marks = 480px for 360°
+            // Middle repeat starts at -480px (8 marks * 60px)
+            const pixelsPerDegree = 480 / 360; // 1.333px per degree
+            const offset = -heading * pixelsPerDegree - 480; // -480 to start at middle repeat
+            compassTapeEl.style.transform = `translateX(${offset}px)`;
 
             // Find destination in this direction
             const destination = findDestinationInDirection(
@@ -520,7 +608,7 @@
             if (destination) {
                 destinationNameEl.textContent = destination.name;
                 distanceEl.textContent = `${formatDistance(destination.distance)} away`;
-                locationInfoEl.textContent = `Bearing: ${Math.round(destination.bearing)}° | Match: ${(30 - destination.angleDiff).toFixed(0)}% accuracy`;
+                locationInfoEl.textContent = `Bearing: ${Math.round(destination.bearing)}° | Match accuracy: ${Math.round((30 - destination.angleDiff) / 30 * 100)}%`;
                 statusEl.textContent = 'Tracking...';
             } else {
                 destinationNameEl.textContent = 'Open Ocean';
