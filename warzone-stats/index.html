@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warzone Stats Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Warzone Stats Dashboard</h1>
+            <p class="subtitle">9 Years of Strategic Warfare</p>
+            <p class="last-updated" id="lastUpdated"></p>
+        </header>
+
+        <section class="stats-overview" id="statsOverview">
+            <div class="stat-card">
+                <div class="stat-value" id="totalGames">--</div>
+                <div class="stat-label">Total Games</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalPlayers">--</div>
+                <div class="stat-label">Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgTurns">--</div>
+                <div class="stat-label">Avg Turns/Game</div>
+            </div>
+        </section>
+
+        <section class="leaderboard">
+            <h2>Leaderboard</h2>
+            <table id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Wins</th>
+                        <th>Losses</th>
+                        <th>Games</th>
+                        <th>Win Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody">
+                </tbody>
+            </table>
+        </section>
+
+        <section class="head-to-head">
+            <h2>Head-to-Head Records</h2>
+            <p class="section-desc">Select a player to see their record against others</p>
+            <div class="h2h-controls">
+                <select id="h2hPlayer">
+                    <option value="">Select a player...</option>
+                </select>
+            </div>
+            <div id="h2hResults" class="h2h-results"></div>
+        </section>
+
+        <section class="games-list">
+            <h2>Game History</h2>
+            <div class="filters">
+                <input type="text" id="searchGames" placeholder="Search games...">
+                <select id="filterPlayer">
+                    <option value="">All players</option>
+                </select>
+                <select id="filterState">
+                    <option value="">All states</option>
+                    <option value="Finished">Finished</option>
+                    <option value="Playing">In Progress</option>
+                </select>
+            </div>
+            <div id="gamesContainer" class="games-container"></div>
+        </section>
+
+        <footer>
+            <p>Data powered by <a href="https://www.warzone.com/wiki/API" target="_blank">Warzone API</a></p>
+        </footer>
+    </div>
+
+    <script>
+        let gamesData = null;
+
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) {
+                    throw new Error('Could not load data.json - run fetch-games.py first');
+                }
+                gamesData = await response.json();
+                renderDashboard();
+            } catch (error) {
+                document.querySelector('.container').innerHTML = `
+                    <div class="error">
+                        <h2>No Data Found</h2>
+                        <p>${error.message}</p>
+                        <p>To get started:</p>
+                        <ol>
+                            <li>Get your API token from <a href="https://www.warzone.com/API/GetAPIToken">warzone.com</a></li>
+                            <li>Create a file with your game IDs (one per line)</li>
+                            <li>Run: <code>python fetch-games.py -e your@email.com -t YOUR_TOKEN -g game_ids.txt</code></li>
+                        </ol>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDashboard() {
+            // Update timestamp
+            const date = new Date(gamesData.fetchedAt);
+            document.getElementById('lastUpdated').textContent = `Last updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+
+            // Overview stats
+            document.getElementById('totalGames').textContent = gamesData.totalGames;
+            document.getElementById('totalPlayers').textContent = gamesData.playerStats.length;
+
+            const finishedGames = gamesData.games.filter(g => g.state === 'Finished');
+            const avgTurns = finishedGames.length > 0
+                ? Math.round(finishedGames.reduce((sum, g) => sum + g.numberOfTurns, 0) / finishedGames.length)
+                : 0;
+            document.getElementById('avgTurns').textContent = avgTurns;
+
+            // Leaderboard
+            renderLeaderboard();
+
+            // Populate dropdowns
+            populatePlayerDropdowns();
+
+            // Games list
+            renderGames(gamesData.games);
+
+            // Event listeners
+            setupEventListeners();
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            const sorted = [...gamesData.playerStats].sort((a, b) => {
+                // Sort by wins, then by win rate
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                const aRate = a.games > 0 ? a.wins / a.games : 0;
+                const bRate = b.games > 0 ? b.wins / b.games : 0;
+                return bRate - aRate;
+            });
+
+            tbody.innerHTML = sorted.map((player, idx) => {
+                const winRate = player.games > 0 ? (player.wins / player.games * 100).toFixed(1) : 0;
+                const rankClass = idx < 3 ? `rank-${idx + 1}` : '';
+                return `
+                    <tr class="${rankClass}">
+                        <td class="rank">${idx + 1}</td>
+                        <td class="player-name">${escapeHtml(player.name)}</td>
+                        <td class="wins">${player.wins}</td>
+                        <td class="losses">${player.losses}</td>
+                        <td>${player.games}</td>
+                        <td>${winRate}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populatePlayerDropdowns() {
+            const players = gamesData.playerStats.map(p => p.name).sort();
+            const options = players.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+            document.getElementById('h2hPlayer').innerHTML = '<option value="">Select a player...</option>' + options;
+            document.getElementById('filterPlayer').innerHTML = '<option value="">All players</option>' + options;
+        }
+
+        function renderGames(games) {
+            const container = document.getElementById('gamesContainer');
+            const sorted = [...games].sort((a, b) => {
+                // Sort by date, newest first
+                if (a.created && b.created) {
+                    return new Date(b.created) - new Date(a.created);
+                }
+                return b.id - a.id;
+            });
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<p class="no-results">No games found</p>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(game => {
+                const date = game.created ? new Date(game.created).toLocaleDateString() : 'Unknown date';
+                const winners = game.winners.length > 0 ? game.winners.join(', ') : 'N/A';
+                const stateClass = game.state === 'Finished' ? 'finished' : 'in-progress';
+
+                const playersList = game.players.map(p => {
+                    const stateIcon = p.state === 'Won' ? ' &#x1F3C6;' : '';
+                    return `<span class="player-tag ${p.state.toLowerCase()}">${escapeHtml(p.name)}${stateIcon}</span>`;
+                }).join(' ');
+
+                return `
+                    <div class="game-card ${stateClass}">
+                        <div class="game-header">
+                            <a href="https://www.warzone.com/MultiPlayer?GameID=${game.id}" target="_blank" class="game-name">${escapeHtml(game.name)}</a>
+                            <span class="game-date">${date}</span>
+                        </div>
+                        <div class="game-details">
+                            <span class="game-state ${stateClass}">${game.state}</span>
+                            <span class="game-turns">${game.numberOfTurns} turns</span>
+                        </div>
+                        <div class="game-players">${playersList}</div>
+                        ${game.winners.length > 0 ? `<div class="game-winner">Winner: ${escapeHtml(winners)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateH2H(playerName) {
+            const h2h = {};
+
+            gamesData.games.filter(g => g.state === 'Finished').forEach(game => {
+                const playerInGame = game.players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+                if (!playerInGame) return;
+
+                const playerWon = playerInGame.state === 'Won';
+
+                game.players.forEach(opponent => {
+                    if (opponent.name.toLowerCase() === playerName.toLowerCase()) return;
+
+                    if (!h2h[opponent.name]) {
+                        h2h[opponent.name] = { wins: 0, losses: 0, games: 0 };
+                    }
+
+                    h2h[opponent.name].games++;
+                    if (playerWon) {
+                        h2h[opponent.name].wins++;
+                    } else if (opponent.state === 'Won') {
+                        h2h[opponent.name].losses++;
+                    }
+                });
+            });
+
+            return h2h;
+        }
+
+        function renderH2H(playerName) {
+            const container = document.getElementById('h2hResults');
+
+            if (!playerName) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const h2h = calculateH2H(playerName);
+            const entries = Object.entries(h2h).sort((a, b) => b[1].games - a[1].games);
+
+            if (entries.length === 0) {
+                container.innerHTML = '<p class="no-results">No head-to-head data found</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="h2h-table">
+                    <thead>
+                        <tr>
+                            <th>Opponent</th>
+                            <th>Record</th>
+                            <th>Games</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${entries.map(([opponent, record]) => {
+                            const recordClass = record.wins > record.losses ? 'positive' : record.wins < record.losses ? 'negative' : 'even';
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(opponent)}</td>
+                                    <td class="${recordClass}">${record.wins} - ${record.losses}</td>
+                                    <td>${record.games}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function setupEventListeners() {
+            // Head-to-head selector
+            document.getElementById('h2hPlayer').addEventListener('change', (e) => {
+                renderH2H(e.target.value);
+            });
+
+            // Game filters
+            const filterGames = () => {
+                const search = document.getElementById('searchGames').value.toLowerCase();
+                const player = document.getElementById('filterPlayer').value.toLowerCase();
+                const state = document.getElementById('filterState').value;
+
+                const filtered = gamesData.games.filter(game => {
+                    if (search && !game.name.toLowerCase().includes(search)) return false;
+                    if (player && !game.players.some(p => p.name.toLowerCase() === player)) return false;
+                    if (state && game.state !== state) return false;
+                    return true;
+                });
+
+                renderGames(filtered);
+            };
+
+            document.getElementById('searchGames').addEventListener('input', filterGames);
+            document.getElementById('filterPlayer').addEventListener('change', filterGames);
+            document.getElementById('filterState').addEventListener('change', filterGames);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load data on page load
+        loadData();
+    </script>
+</body>
+</html>

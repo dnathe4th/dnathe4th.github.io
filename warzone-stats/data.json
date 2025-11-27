@@ -1,0 +1,127 @@
+{
+  "fetchedAt": "2024-01-15T12:00:00Z",
+  "totalGames": 8,
+  "games": [
+    {
+      "id": 12345678,
+      "name": "Family Game Night #127",
+      "state": "Finished",
+      "created": "2024-01-10T20:00:00Z",
+      "numberOfTurns": 42,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Won", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Eliminated", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Eliminated", "team": "None"},
+        {"id": "1004", "name": "Player4", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player1"],
+      "templateId": 999
+    },
+    {
+      "id": 12345677,
+      "name": "Weekend Warriors",
+      "state": "Finished",
+      "created": "2024-01-05T18:30:00Z",
+      "numberOfTurns": 38,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Eliminated", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Won", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player2"],
+      "templateId": 999
+    },
+    {
+      "id": 12345676,
+      "name": "New Year Battle",
+      "state": "Finished",
+      "created": "2024-01-01T00:15:00Z",
+      "numberOfTurns": 55,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Eliminated", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Eliminated", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Won", "team": "None"},
+        {"id": "1004", "name": "Player4", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player3"],
+      "templateId": 999
+    },
+    {
+      "id": 12345675,
+      "name": "Holiday Showdown",
+      "state": "Finished",
+      "created": "2023-12-25T14:00:00Z",
+      "numberOfTurns": 29,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Won", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Eliminated", "team": "None"},
+        {"id": "1004", "name": "Player4", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player1"],
+      "templateId": 999
+    },
+    {
+      "id": 12345674,
+      "name": "Strategy Session",
+      "state": "Finished",
+      "created": "2023-12-20T19:00:00Z",
+      "numberOfTurns": 47,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Eliminated", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Eliminated", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Eliminated", "team": "None"},
+        {"id": "1004", "name": "Player4", "state": "Won", "team": "None"}
+      ],
+      "winners": ["Player4"],
+      "templateId": 999
+    },
+    {
+      "id": 12345673,
+      "name": "Quick Match",
+      "state": "Finished",
+      "created": "2023-12-15T21:00:00Z",
+      "numberOfTurns": 18,
+      "players": [
+        {"id": "1002", "name": "Player2", "state": "Won", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player2"],
+      "templateId": 999
+    },
+    {
+      "id": 12345672,
+      "name": "Epic Battle Royale",
+      "state": "Finished",
+      "created": "2023-12-10T17:30:00Z",
+      "numberOfTurns": 63,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Won", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Eliminated", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Eliminated", "team": "None"},
+        {"id": "1004", "name": "Player4", "state": "Eliminated", "team": "None"}
+      ],
+      "winners": ["Player1"],
+      "templateId": 999
+    },
+    {
+      "id": 12345671,
+      "name": "Current Game",
+      "state": "Playing",
+      "created": "2024-01-14T10:00:00Z",
+      "numberOfTurns": 12,
+      "players": [
+        {"id": "1001", "name": "Player1", "state": "Playing", "team": "None"},
+        {"id": "1002", "name": "Player2", "state": "Playing", "team": "None"},
+        {"id": "1003", "name": "Player3", "state": "Playing", "team": "None"}
+      ],
+      "winners": [],
+      "templateId": 999
+    }
+  ],
+  "playerStats": [
+    {"name": "Player1", "wins": 3, "losses": 3, "games": 6},
+    {"name": "Player2", "wins": 2, "losses": 4, "games": 7},
+    {"name": "Player3", "wins": 1, "losses": 5, "games": 7},
+    {"name": "Player4", "wins": 1, "losses": 3, "games": 4}
+  ]
+}
