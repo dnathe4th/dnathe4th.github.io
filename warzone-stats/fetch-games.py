@@ -282,19 +282,19 @@ def authenticate_and_get_session(email: str, password: str, debug: bool = False)
 
 
 def scrape_game_ids_with_session(session: requests.Session, max_pages: int = 100, debug: bool = False, existing_ids: set = None) -> list[str]:
-    """Scrape all game IDs from the Past Games page using authenticated session.
+    """Scrape game IDs from the Past Games page.
 
-    If existing_ids is provided (for incremental updates), stops early when
-    encountering games we already have.
+    With --merge: Fetches first page only, stops if ANY games are already cached.
+    Without --merge: Fetches pages up to max_pages.
     """
     print("Scraping game IDs from Past Games (binary format)...")
     all_game_ids = set()
-    page = 0
-    pages_with_all_existing = 0
-
     per_page = 200  # Max allowed by Warzone
 
-    while page < max_pages:
+    # Simple logic: if merging, just get first page and stop if we have any cached
+    pages_to_fetch = 1 if existing_ids else max_pages
+
+    for page in range(pages_to_fetch):
         offset = page * per_page
         print(f"  Fetching page {page + 1} (offset {offset})...", end=" ")
 
@@ -340,26 +340,20 @@ def scrape_game_ids_with_session(session: requests.Session, max_pages: int = 100
                     print("No game IDs found (reached end)")
                     break
 
-                new_ids = page_ids - all_game_ids
                 all_game_ids.update(page_ids)
 
-                # For incremental updates
+                # For incremental updates: check if we have any cached games
                 if existing_ids:
-                    newly_discovered = page_ids - existing_ids
-                    if not newly_discovered:
-                        pages_with_all_existing += 1
-                        print(f"All {len(page_ids)} games already in cache ({pages_with_all_existing} consecutive, {len(all_game_ids)} total)")
+                    cached_count = len(page_ids & existing_ids)
+                    new_count = len(page_ids - existing_ids)
+                    print(f"Found {new_count} new + {cached_count} cached = {len(page_ids)} total IDs")
 
-                        if pages_with_all_existing >= 3:
-                            print("\n  Stopping - 3 pages of existing games")
-                            break
-                    else:
-                        pages_with_all_existing = 0
-                        print(f"Found {len(newly_discovered)} new + {len(page_ids) - len(newly_discovered)} existing ({len(all_game_ids)} total)")
+                    if cached_count > 0:
+                        print(f"  Found cached games - stopping (incremental update)")
+                        break
                 else:
-                    print(f"Found {len(new_ids)} new games ({len(all_game_ids)} total)")
+                    print(f"Found {len(page_ids)} game IDs")
 
-                page += 1
                 time.sleep(RATE_LIMIT_DELAY)
 
             except ValueError as e:
