@@ -1,6 +1,6 @@
 {
-  "fetchedAt": "2025-11-30T15:57:51.422992Z",
-  "totalGames": 137,
+  "fetchedAt": "2025-11-30T17:43:51.575748Z",
+  "totalGames": 134,
   "games": [
     {
       "id": "12575368",
@@ -2264,37 +2264,6 @@
       "templateId": null
     },
     {
-      "id": "13709736",
-      "name": "Rematch: starvation in Rome, army cap 2x income",
-      "state": "Finished",
-      "created": "6/25/2017 00:11:10",
-      "numberOfTurns": "16",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "3976572255",
-          "name": "Jtaugelli",
-          "state": "Won",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "RemovedByHost",
-          "team": "None"
-        }
-      ],
-      "winners": [
-        "Jtaugelli"
-      ],
-      "templateId": "1052462"
-    },
-    {
       "id": "26678961",
       "name": "dom's warlight game",
       "state": "Finished",
@@ -2930,65 +2899,6 @@
         "dnathe4th"
       ],
       "templateId": null
-    },
-    {
-      "id": "13299682",
-      "name": "dnathe4th's WarLight game",
-      "state": "Finished",
-      "created": "4/14/2017 21:15:37",
-      "numberOfTurns": "19",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "-1000",
-          "name": "AI 1",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1001",
-          "name": "AI 2",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1002",
-          "name": "AI 3",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1003",
-          "name": "AI 4",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1004",
-          "name": "AI 5",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1005",
-          "name": "AI 6",
-          "state": "Eliminated",
-          "team": "None"
-        }
-      ],
-      "winners": [],
-      "templateId": "1022054"
     },
     {
       "id": "13202917",
@@ -4139,31 +4049,6 @@
       "winners": [
         "dnathe4th",
         "tedwaldo"
-      ],
-      "templateId": null
-    },
-    {
-      "id": "15855604",
-      "name": "Auto Imperium Romanum LD 1v1 (light fog)",
-      "state": "Finished",
-      "created": "6/18/2018 06:15:11",
-      "numberOfTurns": "19",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "Won",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "Booted",
-          "team": "None"
-        }
-      ],
-      "winners": [
-        "dnathe4th"
       ],
       "templateId": null
     },
@@ -7990,15 +7875,15 @@
   "playerStats": [
     {
       "name": "dnathe4th",
-      "wins": 22,
-      "losses": 112,
-      "games": 136
+      "wins": 21,
+      "losses": 110,
+      "games": 133
     },
     {
       "name": "Jtaugelli",
-      "wins": 5,
+      "wins": 4,
       "losses": 57,
-      "games": 67
+      "games": 66
     },
     {
       "name": "Dauntless",
@@ -8009,8 +7894,8 @@
     {
       "name": "ajnard",
       "wins": 23,
-      "losses": 109,
-      "games": 136
+      "losses": 107,
+      "games": 133
     },
     {
       "name": "13litz_krieg",
@@ -8052,37 +7937,7 @@
       "name": "AI 1",
       "wins": 1,
       "losses": 2,
-      "games": 5
-    },
-    {
-      "name": "AI 2",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 3",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 4",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 5",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 6",
-      "wins": 0,
-      "losses": 1,
-      "games": 1
+      "games": 4
     },
     {
       "name": "",

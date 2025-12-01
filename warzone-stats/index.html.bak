@@ -167,6 +167,16 @@ tr:hover {
     color: var(--accent);
 }
 
+.last-win {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.placements {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
 /* Head-to-Head */
 .h2h-controls {
     margin-bottom: 20px;
@@ -455,6 +465,8 @@ footer a:hover {
                         <th>Losses</th>
                         <th>Games</th>
                         <th>Win Rate</th>
+                        <th>Last Win</th>
+                        <th>Placements</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboardBody">
@@ -496,8 +508,8 @@ footer a:hover {
 
     <script>
         const EMBEDDED_DATA = {
-  "fetchedAt": "2025-11-30T15:57:51.422992Z",
-  "totalGames": 137,
+  "fetchedAt": "2025-11-30T17:43:51.575748Z",
+  "totalGames": 134,
   "games": [
     {
       "id": "12575368",
@@ -2761,37 +2773,6 @@ footer a:hover {
       "templateId": null
     },
     {
-      "id": "13709736",
-      "name": "Rematch: starvation in Rome, army cap 2x income",
-      "state": "Finished",
-      "created": "6/25/2017 00:11:10",
-      "numberOfTurns": "16",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "3976572255",
-          "name": "Jtaugelli",
-          "state": "Won",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "RemovedByHost",
-          "team": "None"
-        }
-      ],
-      "winners": [
-        "Jtaugelli"
-      ],
-      "templateId": "1052462"
-    },
-    {
       "id": "26678961",
       "name": "dom's warlight game",
       "state": "Finished",
@@ -3427,65 +3408,6 @@ footer a:hover {
         "dnathe4th"
       ],
       "templateId": null
-    },
-    {
-      "id": "13299682",
-      "name": "dnathe4th's WarLight game",
-      "state": "Finished",
-      "created": "4/14/2017 21:15:37",
-      "numberOfTurns": "19",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "SurrenderAccepted",
-          "team": "None"
-        },
-        {
-          "id": "-1000",
-          "name": "AI 1",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1001",
-          "name": "AI 2",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1002",
-          "name": "AI 3",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1003",
-          "name": "AI 4",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1004",
-          "name": "AI 5",
-          "state": "EndedByVote",
-          "team": "None"
-        },
-        {
-          "id": "-1005",
-          "name": "AI 6",
-          "state": "Eliminated",
-          "team": "None"
-        }
-      ],
-      "winners": [],
-      "templateId": "1022054"
     },
     {
       "id": "13202917",
@@ -4636,31 +4558,6 @@ footer a:hover {
       "winners": [
         "dnathe4th",
         "tedwaldo"
-      ],
-      "templateId": null
-    },
-    {
-      "id": "15855604",
-      "name": "Auto Imperium Romanum LD 1v1 (light fog)",
-      "state": "Finished",
-      "created": "6/18/2018 06:15:11",
-      "numberOfTurns": "19",
-      "players": [
-        {
-          "id": "3776911513",
-          "name": "dnathe4th",
-          "state": "Won",
-          "team": "None"
-        },
-        {
-          "id": "3976915175",
-          "name": "ajnard",
-          "state": "Booted",
-          "team": "None"
-        }
-      ],
-      "winners": [
-        "dnathe4th"
       ],
       "templateId": null
     },
@@ -8487,15 +8384,15 @@ footer a:hover {
   "playerStats": [
     {
       "name": "dnathe4th",
-      "wins": 22,
-      "losses": 112,
-      "games": 136
+      "wins": 21,
+      "losses": 110,
+      "games": 133
     },
     {
       "name": "Jtaugelli",
-      "wins": 5,
+      "wins": 4,
       "losses": 57,
-      "games": 67
+      "games": 66
     },
     {
       "name": "Dauntless",
@@ -8506,8 +8403,8 @@ footer a:hover {
     {
       "name": "ajnard",
       "wins": 23,
-      "losses": 109,
-      "games": 136
+      "losses": 107,
+      "games": 133
     },
     {
       "name": "13litz_krieg",
@@ -8549,37 +8446,7 @@ footer a:hover {
       "name": "AI 1",
       "wins": 1,
       "losses": 2,
-      "games": 5
-    },
-    {
-      "name": "AI 2",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 3",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 4",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 5",
-      "wins": 0,
-      "losses": 0,
-      "games": 1
-    },
-    {
-      "name": "AI 6",
-      "wins": 0,
-      "losses": 1,
-      "games": 1
+      "games": 4
     },
     {
       "name": "",
@@ -8652,8 +8519,48 @@ footer a:hover {
             setupEventListeners();
         }
 
+        function calculateEnhancedStats() {
+            // Calculate placements and last win for each player
+            const playerData = {};
+
+            gamesData.games.filter(g => g.state === 'Finished').forEach(game => {
+                // Sort players by placement (Won first, then others)
+                const sortedPlayers = [...game.players].sort((a, b) => {
+                    if (a.state === 'Won') return -1;
+                    if (b.state === 'Won') return 1;
+                    return 0;
+                });
+
+                sortedPlayers.forEach((player, placement) => {
+                    const name = player.name;
+                    if (!playerData[name]) {
+                        playerData[name] = {
+                            placements: {},
+                            lastWin: null,
+                            totalPlacements: 0
+                        };
+                    }
+
+                    const pos = placement + 1;
+                    playerData[name].placements[pos] = (playerData[name].placements[pos] || 0) + 1;
+                    playerData[name].totalPlacements++;
+
+                    if (player.state === 'Won' && game.created) {
+                        const gameDate = new Date(game.created);
+                        if (!playerData[name].lastWin || gameDate > playerData[name].lastWin) {
+                            playerData[name].lastWin = gameDate;
+                        }
+                    }
+                });
+            });
+
+            return playerData;
+        }
+
         function renderLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
+            const enhancedStats = calculateEnhancedStats();
+
             const sorted = [...gamesData.playerStats].sort((a, b) => {
                 // Sort by wins, then by win rate
                 if (b.wins !== a.wins) return b.wins - a.wins;
@@ -8665,6 +8572,21 @@ footer a:hover {
             tbody.innerHTML = sorted.map((player, idx) => {
                 const winRate = player.games > 0 ? (player.wins / player.games * 100).toFixed(1) : 0;
                 const rankClass = idx < 3 ? `rank-${idx + 1}` : '';
+
+                const enhanced = enhancedStats[player.name] || {};
+                const lastWin = enhanced.lastWin
+                    ? enhanced.lastWin.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : 'Never';
+
+                // Show placement distribution (1st, 2nd, 3rd, Last)
+                const placements = enhanced.placements || {};
+                const totalGames = enhanced.totalPlacements || 0;
+                const first = placements[1] || 0;
+                const last = placements[totalGames] || 0;
+                const placementText = totalGames > 0
+                    ? `1st: ${first}, Last: ${last}`
+                    : '-';
+
                 return `
                     <tr class="${rankClass}">
                         <td class="rank">${idx + 1}</td>
@@ -8673,6 +8595,8 @@ footer a:hover {
                         <td class="losses">${player.losses}</td>
                         <td>${player.games}</td>
                         <td>${winRate}%</td>
+                        <td class="last-win">${lastWin}</td>
+                        <td class="placements">${placementText}</td>
                     </tr>
                 `;
             }).join('');

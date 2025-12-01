@@ -30,13 +30,13 @@ def build_standalone():
         f'<script>\n        const EMBEDDED_DATA = {data};\n'
     )
 
-    # Write standalone file
-    output = Path('dashboard.html')
+    # Write standalone file (overwrite index.html to make it standalone)
+    output = Path('index.html')
     output.write_text(html_with_data)
 
-    print(f'Created standalone dashboard: {output}')
+    print(f'Updated index.html to standalone version (embedded CSS and data)')
     print(f'File size: {len(html_with_data) / 1024:.1f} KB')
-    print(f'\nYou can now open {output} directly in your browser!')
+    print(f'\nYou can now open index.html directly in your browser!')
 
 if __name__ == '__main__':
     build_standalone()

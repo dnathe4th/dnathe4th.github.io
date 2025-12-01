@@ -4,7 +4,427 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warzone Stats Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <style>* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --text-primary: #eee;
+    --text-secondary: #aaa;
+    --accent: #e94560;
+    --accent-secondary: #0f3460;
+    --success: #4ecca3;
+    --warning: #ffc93c;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 40px 0;
+    border-bottom: 1px solid var(--bg-card);
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--warning));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.last-updated {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+/* Stats Overview */
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* Sections */
+section {
+    margin-bottom: 40px;
+}
+
+section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+}
+
+.section-desc {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+/* Leaderboard Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+}
+
+th {
+    background: var(--bg-card);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+tr:not(:last-child) {
+    border-bottom: 1px solid var(--bg-card);
+}
+
+tr:hover {
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.rank {
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.rank-1 .rank { color: gold; font-size: 1.2rem; }
+.rank-2 .rank { color: silver; font-size: 1.1rem; }
+.rank-3 .rank { color: #cd7f32; font-size: 1.05rem; }
+
+.player-name {
+    font-weight: 600;
+}
+
+.wins {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.losses {
+    color: var(--accent);
+}
+
+.last-win {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Head-to-Head */
+.h2h-controls {
+    margin-bottom: 20px;
+}
+
+.h2h-controls select {
+    padding: 12px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.h2h-table {
+    max-width: 500px;
+}
+
+.h2h-table .positive {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.h2h-table .negative {
+    color: var(--accent);
+}
+
+.h2h-table .even {
+    color: var(--warning);
+}
+
+/* Filters */
+.filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filters input,
+.filters select {
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    min-width: 150px;
+}
+
+.filters input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filters input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Games List */
+.games-container {
+    display: grid;
+    gap: 15px;
+}
+
+.game-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid var(--accent);
+    transition: transform 0.2s;
+}
+
+.game-card:hover {
+    transform: translateX(5px);
+}
+
+.game-card.finished {
+    border-left-color: var(--success);
+}
+
+.game-card.in-progress {
+    border-left-color: var(--warning);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.game-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.game-name:hover {
+    color: var(--accent);
+}
+
+.game-date {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.game-details {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.game-state {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.game-state.finished {
+    background: rgba(78, 204, 163, 0.2);
+    color: var(--success);
+}
+
+.game-state.in-progress {
+    background: rgba(255, 201, 60, 0.2);
+    color: var(--warning);
+}
+
+.game-turns {
+    color: var(--text-secondary);
+}
+
+.game-players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.player-tag {
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+}
+
+.player-tag.won {
+    background: rgba(78, 204, 163, 0.3);
+    color: var(--success);
+}
+
+.player-tag.eliminated {
+    opacity: 0.7;
+}
+
+.game-winner {
+    color: var(--success);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--bg-card);
+    color: var(--text-secondary);
+}
+
+footer a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Error State */
+.error {
+    background: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.error h2 {
+    color: var(--accent);
+    margin-bottom: 15px;
+}
+
+.error ol {
+    text-align: left;
+    max-width: 500px;
+    margin: 20px auto;
+}
+
+.error li {
+    margin-bottom: 10px;
+}
+
+.error code {
+    background: var(--bg-card);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.error a {
+    color: var(--accent);
+}
+
+.no-results {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .stats-overview {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    th, td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .filters input,
+    .filters select {
+        width: 100%;
+    }
+}
+</style>
 </head>
 <body>
     <div class="container">
@@ -40,6 +460,7 @@
                         <th>Losses</th>
                         <th>Games</th>
                         <th>Win Rate</th>
+                        <th>Last Win</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboardBody">
@@ -80,11 +501,7962 @@
     </div>
 
     <script>
+        const EMBEDDED_DATA = {
+  "fetchedAt": "2025-11-30T17:43:51.575748Z",
+  "totalGames": 134,
+  "games": [
+    {
+      "id": "12575368",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "12/28/2016 02:49:46",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": "971853"
+    },
+    {
+      "id": "13539475",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "5/25/2017 05:50:56",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Declined",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "32982956",
+      "name": "Failure is Not an Option",
+      "state": "Finished",
+      "created": "12/23/2022 18:30:55",
+      "numberOfTurns": "70",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "17442171",
+      "name": "Moriarty's Warzone game",
+      "state": "Finished",
+      "created": "1/2/2019 01:14:18",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "18506504",
+      "name": "tedwaldo's Warzone game",
+      "state": "Finished",
+      "created": "4/29/2019 00:20:42",
+      "numberOfTurns": "24",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": "1229472"
+    },
+    {
+      "id": "25303638",
+      "name": "The Americas",
+      "state": "Finished",
+      "created": "1/9/2021 02:54:02",
+      "numberOfTurns": "38",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "28610931",
+      "name": "we <3 dauntless",
+      "state": "Finished",
+      "created": "10/21/2021 16:01:15",
+      "numberOfTurns": "38",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1421405"
+    },
+    {
+      "id": "21269420",
+      "name": "Wes Jones's Warzone game",
+      "state": "Finished",
+      "created": "3/26/2020 23:55:47",
+      "numberOfTurns": "57",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "26477484",
+      "name": "dom is the impostor",
+      "state": "Finished",
+      "created": "4/9/2021 14:16:03",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "23033287",
+      "name": "Wes Jones' Warzone game",
+      "state": "Finished",
+      "created": "7/1/2020 21:22:44",
+      "numberOfTurns": "48",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13440081",
+      "name": "Moriarty's WarLight game",
+      "state": "Finished",
+      "created": "5/8/2017 17:45:05",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "40504560",
+      "name": "A Song of Ice and Fire",
+      "state": "Finished",
+      "created": "2/23/2025 16:26:39",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "33864776",
+      "name": "Mr Gump\u2019s Seven Hump Wump",
+      "state": "Finished",
+      "created": "3/19/2023 18:11:32",
+      "numberOfTurns": "46",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "KennyPowers"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12647846",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "1/7/2017 18:03:59",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "19560480",
+      "name": "tedwaldo's Warzone game",
+      "state": "Finished",
+      "created": "9/4/2019 00:12:16",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15708958",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "5/26/2018 19:53:01",
+      "numberOfTurns": "29",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Declined",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": "1149926"
+    },
+    {
+      "id": "40001642",
+      "name": "happy new warzone game",
+      "state": "Finished",
+      "created": "1/1/2025 14:46:00",
+      "numberOfTurns": "43",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "16737305",
+      "name": "KennyPowers' Warzone game",
+      "state": "Finished",
+      "created": "10/21/2018 05:53:44",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15410643",
+      "name": "John\u2019s Warzone game",
+      "state": "Finished",
+      "created": "4/13/2018 04:06:02",
+      "numberOfTurns": "19",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "27014930",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "5/23/2021 18:45:40",
+      "numberOfTurns": "67",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "28403697",
+      "name": "kelly0303's warlight game",
+      "state": "Finished",
+      "created": "9/30/2021 13:08:28",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1394422"
+    },
+    {
+      "id": "26860113",
+      "name": "Let there be light",
+      "state": "Finished",
+      "created": "5/10/2021 15:40:23",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "38380230",
+      "name": "Moriarty: Triple Threat",
+      "state": "Finished",
+      "created": "7/7/2024 15:25:50",
+      "numberOfTurns": "9",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "40806451",
+      "name": "Dauntless's Warzone game",
+      "state": "Finished",
+      "created": "3/26/2025 00:32:23",
+      "numberOfTurns": "20",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "1"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "3"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15079937",
+      "name": "Mike's Game",
+      "state": "Finished",
+      "created": "2/24/2018 14:57:59",
+      "numberOfTurns": "38",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Jtaugelli"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13868744",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "7/26/2017 05:08:19",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1055619"
+    },
+    {
+      "id": "28887592",
+      "name": "the buttfish bonanza",
+      "state": "Finished",
+      "created": "11/18/2021 21:39:30",
+      "numberOfTurns": "39",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "31402899",
+      "name": "Dauntless's Warzone game",
+      "state": "Finished",
+      "created": "7/14/2022 13:50:28",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "34270654",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "4/30/2023 17:21:28",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "31876029",
+      "name": "make dat $$$$$$",
+      "state": "Finished",
+      "created": "9/3/2022 17:07:22",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14031564",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "8/28/2017 18:21:31",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "26242767",
+      "name": "KennyPowers's Warzone game",
+      "state": "Finished",
+      "created": "3/21/2021 22:33:47",
+      "numberOfTurns": "55",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "30837539",
+      "name": "Time is ticking",
+      "state": "Finished",
+      "created": "5/18/2022 18:54:43",
+      "numberOfTurns": "30",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "20105243",
+      "name": "Mike's Warzone game",
+      "state": "Finished",
+      "created": "11/17/2019 04:40:48",
+      "numberOfTurns": "35",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1147645"
+    },
+    {
+      "id": "37475272",
+      "name": "Moriarty\u2019s Illegitimate Victory Game",
+      "state": "Finished",
+      "created": "4/3/2024 14:35:01",
+      "numberOfTurns": "77",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "36782940",
+      "name": "Let\u2019s all blame the placement",
+      "state": "Finished",
+      "created": "1/20/2024 23:56:20",
+      "numberOfTurns": "56",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12690267",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "1/13/2017 17:03:29",
+      "numberOfTurns": "63",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14211049",
+      "name": "dnathe4th's WarLight game",
+      "state": "Finished",
+      "created": "10/2/2017 16:26:41",
+      "numberOfTurns": "25",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "26678961",
+      "name": "dom's warlight game",
+      "state": "Finished",
+      "created": "4/25/2021 18:57:15",
+      "numberOfTurns": "35",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": "1394422"
+    },
+    {
+      "id": "42153983",
+      "name": "Spy vs Spy: RPG edition",
+      "state": "Finished",
+      "created": "8/30/2025 16:17:18",
+      "numberOfTurns": "52",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13112527",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "3/15/2017 01:42:11",
+      "numberOfTurns": "26",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "18790986",
+      "name": "Moriarty\u2019s Warzone game",
+      "state": "Finished",
+      "created": "6/1/2019 16:27:45",
+      "numberOfTurns": "17",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "SurrenderAccepted",
+          "team": "0"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "Dauntless",
+        "ajnard",
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12446468",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "12/7/2016 18:43:32",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Jtaugelli"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "18271029",
+      "name": "KennyPowers's Warzone game",
+      "state": "Finished",
+      "created": "4/1/2019 13:30:18",
+      "numberOfTurns": "42",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13965121",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "8/15/2017 01:59:20",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13754450",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "7/3/2017 18:13:39",
+      "numberOfTurns": "18",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1055619"
+    },
+    {
+      "id": "14697420",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "12/30/2017 01:40:09",
+      "numberOfTurns": "22",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "Dauntless",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "19205083",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "7/29/2019 05:39:58",
+      "numberOfTurns": "42",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "EndedByVote",
+          "team": "None"
+        }
+      ],
+      "winners": [],
+      "templateId": null
+    },
+    {
+      "id": "25660335",
+      "name": "A different title",
+      "state": "Finished",
+      "created": "2/4/2021 23:25:50",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13202917",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "3/29/2017 17:14:22",
+      "numberOfTurns": "30",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "-1000",
+          "name": "AI 1",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": "1004420"
+    },
+    {
+      "id": "32249254",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "10/12/2022 20:21:16",
+      "numberOfTurns": "10",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Booted",
+          "team": "2"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "0"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "3"
+        }
+      ],
+      "winners": [
+        "ajnard",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13060491",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "3/7/2017 07:57:05",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Jtaugelli"
+      ],
+      "templateId": "1004420"
+    },
+    {
+      "id": "22107501",
+      "name": "Moriarty's Commerce --May the 1% Thrive",
+      "state": "Finished",
+      "created": "5/7/2020 16:30:04",
+      "numberOfTurns": "73",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "32620791",
+      "name": "The Return Of The Chat (read rules)",
+      "state": "Finished",
+      "created": "11/17/2022 19:07:53",
+      "numberOfTurns": "38",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": "1471169"
+    },
+    {
+      "id": "12848568",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "2/4/2017 23:38:07",
+      "numberOfTurns": "46",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": "990112"
+    },
+    {
+      "id": "35975447",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "10/25/2023 03:54:20",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12376829",
+      "name": "Gladiator",
+      "state": "Finished",
+      "created": "11/26/2016 19:27:49",
+      "numberOfTurns": "32",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "41090791",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "4/26/2025 02:48:19",
+      "numberOfTurns": "73",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "38992978",
+      "name": "Return of the Mack",
+      "state": "Finished",
+      "created": "9/12/2024 00:56:09",
+      "numberOfTurns": "44",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "16095369",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "7/26/2018 22:36:57",
+      "numberOfTurns": "35",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "27553352",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "7/7/2021 16:55:58",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "35030161",
+      "name": "Moriarty\u2019s",
+      "state": "Finished",
+      "created": "7/18/2023 20:29:39",
+      "numberOfTurns": "42",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "36591373",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "12/30/2023 19:52:54",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "0"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "KennyPowers"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12594300",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "12/30/2016 23:26:54",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": "973101"
+    },
+    {
+      "id": "13802764",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "7/13/2017 04:24:20",
+      "numberOfTurns": "29",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "20805636",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "2/11/2020 20:53:45",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "4"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "4"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15945903",
+      "name": "Moriarty's WarLight game",
+      "state": "Finished",
+      "created": "7/3/2018 11:43:07",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "21024374",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "3/8/2020 05:04:32",
+      "numberOfTurns": "38",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14549232",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "12/6/2017 05:50:37",
+      "numberOfTurns": "32",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "3"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "32041333",
+      "name": "dnathe4th's Warzone game STARVATION",
+      "state": "Finished",
+      "created": "9/21/2022 16:21:35",
+      "numberOfTurns": "36",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12944974",
+      "name": "13litz_krieg's WarLight game",
+      "state": "Finished",
+      "created": "2/18/2017 21:35:57",
+      "numberOfTurns": "51",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": "967550"
+    },
+    {
+      "id": "18908269",
+      "name": "13litz_krieg's Warzone game",
+      "state": "Finished",
+      "created": "6/17/2019 01:41:17",
+      "numberOfTurns": "63",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": "1239654"
+    },
+    {
+      "id": "38099917",
+      "name": "Moriarty; Double the Pleasure",
+      "state": "Finished",
+      "created": "6/6/2024 11:10:06",
+      "numberOfTurns": "25",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "3"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "3"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12364091",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "11/24/2016 21:22:01",
+      "numberOfTurns": "62",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "24660369",
+      "name": "Where in the World is Khaleesi?",
+      "state": "Finished",
+      "created": "11/18/2020 00:51:07",
+      "numberOfTurns": "46",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "25079926",
+      "name": "ceas of konquest",
+      "state": "Finished",
+      "created": "12/22/2020 15:09:34",
+      "numberOfTurns": "39",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "35300574",
+      "name": "hunter\u2019s garden",
+      "state": "Finished",
+      "created": "8/16/2023 12:40:10",
+      "numberOfTurns": "43",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [],
+      "templateId": "1229472"
+    },
+    {
+      "id": "13353367",
+      "name": "dnathe4th's WarLight game",
+      "state": "Finished",
+      "created": "4/23/2017 21:59:16",
+      "numberOfTurns": "29",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "17764361",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "2/4/2019 04:05:33",
+      "numberOfTurns": "20",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13660988",
+      "name": "13litz_krieg's WarLight game",
+      "state": "Finished",
+      "created": "6/16/2017 00:35:09",
+      "numberOfTurns": "22",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "967550"
+    },
+    {
+      "id": "37132484",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "2/27/2024 23:40:03",
+      "numberOfTurns": "77",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "18639865",
+      "name": "Moriarty\u2019s Warzone game",
+      "state": "Finished",
+      "created": "5/14/2019 14:38:44",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "1"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "Dauntless",
+        "ajnard",
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "36441387",
+      "name": "KennyPowers's Warzone game",
+      "state": "Finished",
+      "created": "12/13/2023 21:42:39",
+      "numberOfTurns": "11",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "17031217",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "11/20/2018 19:48:03",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "29412307",
+      "name": "2 v 2 v 2 v 2",
+      "state": "Finished",
+      "created": "1/11/2022 02:01:36",
+      "numberOfTurns": "45",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "2"
+        }
+      ],
+      "winners": [
+        "KennyPowers",
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "35791329",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "10/5/2023 05:09:24",
+      "numberOfTurns": "24",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [],
+      "templateId": null
+    },
+    {
+      "id": "16278228",
+      "name": "Jim's Warzone game",
+      "state": "Finished",
+      "created": "8/22/2018 00:46:22",
+      "numberOfTurns": "29",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "3"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "2"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "2"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "ajnard"
+      ],
+      "templateId": "1167836"
+    },
+    {
+      "id": "14117519",
+      "name": "Jim's WarLight game",
+      "state": "Finished",
+      "created": "9/14/2017 23:36:15",
+      "numberOfTurns": "0",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Booted",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "EndedByVote",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Booted",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Booted",
+          "team": "1"
+        },
+        {
+          "id": "-1000",
+          "name": "AI 1",
+          "state": "EndedByVote",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "0"
+        }
+      ],
+      "winners": [],
+      "templateId": null
+    },
+    {
+      "id": "13597566",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "6/4/2017 20:21:10",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "23383677",
+      "name": "God of Morrowind's Wrath",
+      "state": "Finished",
+      "created": "7/29/2020 02:57:49",
+      "numberOfTurns": "45",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12772346",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "1/25/2017 03:12:22",
+      "numberOfTurns": "28",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "33497056",
+      "name": "A Return to Normalcy",
+      "state": "Finished",
+      "created": "2/11/2023 02:45:06",
+      "numberOfTurns": "30",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13328058",
+      "name": "dnathe4th's WarLight game",
+      "state": "Finished",
+      "created": "4/19/2017 16:26:49",
+      "numberOfTurns": "19",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4383532403",
+          "name": "",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": "1024242"
+    },
+    {
+      "id": "25921295",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "2/24/2021 22:42:44",
+      "numberOfTurns": "47",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "KennyPowers"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15638744",
+      "name": "Mike's Warzone game",
+      "state": "Finished",
+      "created": "5/16/2018 14:02:19",
+      "numberOfTurns": "17",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": "1147645"
+    },
+    {
+      "id": "41936294",
+      "name": "I don't remember how to do this",
+      "state": "Finished",
+      "created": "8/3/2025 21:37:41",
+      "numberOfTurns": "36",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14404277",
+      "name": "tedwaldo's WarLight game",
+      "state": "Finished",
+      "created": "11/8/2017 22:23:53",
+      "numberOfTurns": "25",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": "1100553"
+    },
+    {
+      "id": "39617288",
+      "name": "tedwaldo\u2019s magical mushroom adventure",
+      "state": "Finished",
+      "created": "11/20/2024 11:51:06",
+      "numberOfTurns": "48",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "23732905",
+      "name": "kleopatra's konquest",
+      "state": "Finished",
+      "created": "8/27/2020 19:18:39",
+      "numberOfTurns": "39",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "18008674",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "3/3/2019 02:29:54",
+      "numberOfTurns": "66",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "KennyPowers"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12756951",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "1/22/2017 22:30:36",
+      "numberOfTurns": "19",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "22712852",
+      "name": "Moriarty's Second Warzone game",
+      "state": "Finished",
+      "created": "6/12/2020 00:56:16",
+      "numberOfTurns": "31",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12815583",
+      "name": "dnathe4th's WarLight game",
+      "state": "Finished",
+      "created": "1/31/2017 00:52:03",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": "987652"
+    },
+    {
+      "id": "12620337",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "1/3/2017 22:28:33",
+      "numberOfTurns": "30",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "27875508",
+      "name": "Moriartyman, Into the Mori-verse",
+      "state": "Finished",
+      "created": "8/9/2021 18:14:30",
+      "numberOfTurns": "56",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "0"
+        }
+      ],
+      "winners": [
+        "ajnard",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "39396866",
+      "name": "AGI is not yet in warzone",
+      "state": "Finished",
+      "created": "10/27/2024 19:05:48",
+      "numberOfTurns": "27",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "16541384",
+      "name": "ajnard's Warzone game",
+      "state": "Finished",
+      "created": "9/27/2018 18:30:32",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "KennyPowers"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12566982",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "12/26/2016 19:48:31",
+      "numberOfTurns": "15",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Jtaugelli"
+      ],
+      "templateId": "971333"
+    },
+    {
+      "id": "30458712",
+      "name": "Viva la Revolucion",
+      "state": "Finished",
+      "created": "4/11/2022 20:20:18",
+      "numberOfTurns": "48",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "38728445",
+      "name": "claude 3.5: sonnet strikes back",
+      "state": "Finished",
+      "created": "8/15/2024 13:04:21",
+      "numberOfTurns": "33",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": "1229472"
+    },
+    {
+      "id": "13158327",
+      "name": "ajnard's WarLight game",
+      "state": "Finished",
+      "created": "3/22/2017 03:29:20",
+      "numberOfTurns": "26",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": "1004420"
+    },
+    {
+      "id": "35549530",
+      "name": "mortwaldo's warlight game",
+      "state": "Finished",
+      "created": "9/8/2023 15:26:42",
+      "numberOfTurns": "35",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "EndedByVote",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [],
+      "templateId": null
+    },
+    {
+      "id": "19724953",
+      "name": "tedwaldo's Warzone game",
+      "state": "Finished",
+      "created": "9/27/2019 14:01:19",
+      "numberOfTurns": "63",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "20354891",
+      "name": "tedwaldo's Warzone game",
+      "state": "Finished",
+      "created": "12/18/2019 23:18:01",
+      "numberOfTurns": "33",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14324897",
+      "name": "More  Random Teams!",
+      "state": "Finished",
+      "created": "10/24/2017 20:17:18",
+      "numberOfTurns": "24",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "0"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "2"
+        }
+      ],
+      "winners": [
+        "Moriarty",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "12549383",
+      "name": "Jtaugelli's WarLight game",
+      "state": "Finished",
+      "created": "12/23/2016 17:47:57",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14477041",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "11/22/2017 14:45:41",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "2"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "0"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "3"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "2"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "36504278",
+      "name": "I Wanta Be The Very Best",
+      "state": "Finished",
+      "created": "12/20/2023 18:42:57",
+      "numberOfTurns": "19",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "ajnard"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "15549785",
+      "name": "dnathe4th's Warzone game",
+      "state": "Finished",
+      "created": "5/3/2018 13:35:45",
+      "numberOfTurns": "27",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "RemovedByHost",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "31109677",
+      "name": "make dat $$$",
+      "state": "Finished",
+      "created": "6/14/2022 23:05:07",
+      "numberOfTurns": "43",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": "1453325"
+    },
+    {
+      "id": "29993696",
+      "name": "KennyPowers's Warzone game",
+      "state": "Finished",
+      "created": "2/26/2022 20:23:26",
+      "numberOfTurns": "40",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14839274",
+      "name": "tedwaldo's Warzone game",
+      "state": "Finished",
+      "created": "1/20/2018 20:42:02",
+      "numberOfTurns": "27",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": "1120788"
+    },
+    {
+      "id": "38453117",
+      "name": "Moriarty 3.5: Back to Our Roots",
+      "state": "Finished",
+      "created": "7/15/2024 18:53:05",
+      "numberOfTurns": "30",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "14120772",
+      "name": "Jim's WarLight game",
+      "state": "Finished",
+      "created": "9/15/2017 16:36:12",
+      "numberOfTurns": "8",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "-1000",
+          "name": "AI 1",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "RemovedByHost",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "Moriarty",
+        "ajnard",
+        "AI 1"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "42753448",
+      "name": "Someone Trade me F*ing Wheat!",
+      "state": "Playing",
+      "created": "11/1/2025 20:38:42",
+      "numberOfTurns": "21",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Playing",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Playing",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Playing",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Playing",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Playing",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Playing",
+          "team": "None"
+        }
+      ],
+      "winners": [],
+      "templateId": null
+    },
+    {
+      "id": "20516517",
+      "name": "Moriarty's game",
+      "state": "Finished",
+      "created": "1/9/2020 05:56:22",
+      "numberOfTurns": "42",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4766742277",
+          "name": "Kelly0303",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "tedwaldo"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "13237861",
+      "name": "Dauntless's WarLight game",
+      "state": "Finished",
+      "created": "4/4/2017 15:45:51",
+      "numberOfTurns": "36",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976572255",
+          "name": "Jtaugelli",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Won",
+          "team": "0"
+        },
+        {
+          "id": "-1000",
+          "name": "AI 1",
+          "state": "Eliminated",
+          "team": "1"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "1"
+        }
+      ],
+      "winners": [
+        "dnathe4th",
+        "Dauntless",
+        "ajnard"
+      ],
+      "templateId": "1017556"
+    },
+    {
+      "id": "29178505",
+      "name": "The Return of the Private Message",
+      "state": "Finished",
+      "created": "12/18/2021 23:43:06",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "34855260",
+      "name": "Dauntless's Warzone game",
+      "state": "Finished",
+      "created": "6/30/2023 06:45:33",
+      "numberOfTurns": "23",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Booted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Booted",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "32403310",
+      "name": "ajnard\u2019s Warzone game",
+      "state": "Finished",
+      "created": "10/27/2022 21:14:30",
+      "numberOfTurns": "24",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Moriarty"
+      ],
+      "templateId": "1229472"
+    },
+    {
+      "id": "34571424",
+      "name": "Moriarty\u2019s the Captain Now",
+      "state": "Finished",
+      "created": "5/31/2023 19:11:37",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Dauntless"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "41678871",
+      "name": "Moriarty\u2019s Warzone game",
+      "state": "Finished",
+      "created": "7/3/2025 23:16:01",
+      "numberOfTurns": "34",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "13litz_krieg"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "24084757",
+      "name": "Moriarty's Dodeathagon",
+      "state": "Finished",
+      "created": "9/28/2020 18:36:12",
+      "numberOfTurns": "53",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Won",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "Wes Jones"
+      ],
+      "templateId": null
+    },
+    {
+      "id": "36196056",
+      "name": "Dauntless's Warzone game",
+      "state": "Finished",
+      "created": "11/17/2023 17:03:48",
+      "numberOfTurns": "35",
+      "players": [
+        {
+          "id": "3776911513",
+          "name": "dnathe4th",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "4366559531",
+          "name": "Moriarty",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2076911344",
+          "name": "Dauntless",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "3976915175",
+          "name": "ajnard",
+          "state": "SurrenderAccepted",
+          "team": "None"
+        },
+        {
+          "id": "8676914864",
+          "name": "13litz_krieg",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "2879094842",
+          "name": "KennyPowers",
+          "state": "Won",
+          "team": "None"
+        },
+        {
+          "id": "4883720522",
+          "name": "tedwaldo",
+          "state": "Eliminated",
+          "team": "None"
+        },
+        {
+          "id": "89106026916",
+          "name": "Wes Jones",
+          "state": "Eliminated",
+          "team": "None"
+        }
+      ],
+      "winners": [
+        "KennyPowers"
+      ],
+      "templateId": null
+    }
+  ],
+  "playerStats": [
+    {
+      "name": "dnathe4th",
+      "wins": 21,
+      "losses": 110,
+      "games": 133
+    },
+    {
+      "name": "Jtaugelli",
+      "wins": 4,
+      "losses": 57,
+      "games": 66
+    },
+    {
+      "name": "Dauntless",
+      "wins": 12,
+      "losses": 121,
+      "games": 133
+    },
+    {
+      "name": "ajnard",
+      "wins": 23,
+      "losses": 107,
+      "games": 133
+    },
+    {
+      "name": "13litz_krieg",
+      "wins": 16,
+      "losses": 115,
+      "games": 133
+    },
+    {
+      "name": "Moriarty",
+      "wins": 31,
+      "losses": 79,
+      "games": 113
+    },
+    {
+      "name": "tedwaldo",
+      "wins": 31,
+      "losses": 75,
+      "games": 109
+    },
+    {
+      "name": "KennyPowers",
+      "wins": 7,
+      "losses": 79,
+      "games": 87
+    },
+    {
+      "name": "Wes Jones",
+      "wins": 7,
+      "losses": 65,
+      "games": 72
+    },
+    {
+      "name": "Kelly0303",
+      "wins": 0,
+      "losses": 22,
+      "games": 27
+    },
+    {
+      "name": "AI 1",
+      "wins": 1,
+      "losses": 2,
+      "games": 4
+    },
+    {
+      "name": "",
+      "wins": 0,
+      "losses": 0,
+      "games": 1
+    }
+  ]
+};
+
         let gamesData = null;
 
         async function loadData() {
             try {
-                const response = await fetch('data.json');
+                // Embedded data
+                const response = { ok: true, json: async () => EMBEDDED_DATA };
                 if (!response.ok) {
                     throw new Error('Could not load data.json - run fetch-games.py first');
                 }
@@ -141,6 +8513,20 @@
             setupEventListeners();
         }
 
+        function findLastWin(playerName) {
+            let lastWinDate = null;
+            gamesData.games.filter(g => g.state === 'Finished').forEach(game => {
+                const player = game.players.find(p => p.name === playerName);
+                if (player && player.state === 'Won' && game.created) {
+                    const gameDate = new Date(game.created);
+                    if (!lastWinDate || gameDate > lastWinDate) {
+                        lastWinDate = gameDate;
+                    }
+                }
+            });
+            return lastWinDate;
+        }
+
         function renderLeaderboard() {
             const tbody = document.getElementById('leaderboardBody');
             const sorted = [...gamesData.playerStats].sort((a, b) => {
@@ -154,6 +8540,12 @@
             tbody.innerHTML = sorted.map((player, idx) => {
                 const winRate = player.games > 0 ? (player.wins / player.games * 100).toFixed(1) : 0;
                 const rankClass = idx < 3 ? `rank-${idx + 1}` : '';
+
+                const lastWin = findLastWin(player.name);
+                const lastWinText = lastWin
+                    ? lastWin.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : 'Never';
+
                 return `
                     <tr class="${rankClass}">
                         <td class="rank">${idx + 1}</td>
@@ -162,6 +8554,7 @@
                         <td class="losses">${player.losses}</td>
                         <td>${player.games}</td>
                         <td>${winRate}%</td>
+                        <td class="last-win">${lastWinText}</td>
                     </tr>
                 `;
             }).join('');
