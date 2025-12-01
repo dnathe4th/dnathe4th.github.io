@@ -1,0 +1,5 @@
+.env
+*.env
+debug*.html
+warzone-stats/data.json
+warzone-stats/game_ids.txt

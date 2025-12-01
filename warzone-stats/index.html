@@ -117,9 +117,16 @@
 
             const finishedGames = gamesData.games.filter(g => g.state === 'Finished');
             const avgTurns = finishedGames.length > 0
-                ? Math.round(finishedGames.reduce((sum, g) => sum + g.numberOfTurns, 0) / finishedGames.length)
+                ? Math.round(finishedGames.reduce((sum, g) => sum + parseInt(g.numberOfTurns || 0), 0) / finishedGames.length)
                 : 0;
             document.getElementById('avgTurns').textContent = avgTurns;
+
+            // Update total games to show finished count
+            document.getElementById('totalGames').textContent = finishedGames.length;
+            const inProgress = gamesData.games.filter(g => g.state !== 'Finished').length;
+            if (inProgress > 0) {
+                document.getElementById('totalGames').textContent += ` (${inProgress} in progress)`;
+            }
 
             // Leaderboard
             renderLeaderboard();
