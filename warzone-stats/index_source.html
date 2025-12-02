@@ -96,21 +96,6 @@ header h1 {
     margin-top: 5px;
 }
 
-
-/* Race Chart */
-.race-chart-section { margin-bottom: 50px; }
-.race-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-.race-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; }
-.race-btn:hover { background: #c9354e; }
-.speed-control select { background: var(--bg-card); color: var(--text-primary); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-.current-date { color: var(--accent); font-weight: bold; font-size: 1.1rem; }
-.race-chart { background: var(--bg-secondary); border-radius: 12px; padding: 30px; min-height: 500px; position: relative; height: 500px; }
-.race-bar-container { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; transition: transform 0.5s ease; }
-.race-player-name { width: 150px; text-align: right; padding-right: 15px; font-weight: 600; font-size: 1rem; }
-.race-bar-wrapper { flex: 1; }
-.race-bar { height: 35px; background: linear-gradient(90deg, var(--accent), var(--warning)); border-radius: 6px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; }
-.race-bar-value { color: white; font-weight: bold; font-size: 1.1rem; }
-
 /* Sections */
 section {
     margin-bottom: 40px;
@@ -180,6 +165,11 @@ tr:hover {
 
 .losses {
     color: var(--accent);
+}
+
+.last-win {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 /* Head-to-Head */
@@ -444,26 +434,6 @@ footer a:hover {
             <p class="last-updated" id="lastUpdated"></p>
         </header>
 
-
-        <section class="race-chart-section">
-            <h2>Win Race Over Time</h2>
-            <p class="section-desc">Watch the leaderboard evolve from 2016 to present</p>
-            <div class="race-controls">
-                <button id="playBtn" class="race-btn">▶ Play</button>
-                <button id="pauseBtn" class="race-btn">⏸ Pause</button>
-                <button id="resetBtn" class="race-btn">↺ Reset</button>
-                <span class="speed-control">
-                    Speed: <select id="speedSelect">
-                        <option value="1000">Very Slow</option>
-                        <option value="500" selected>Slow</option>
-                        <option value="200">Normal</option>
-                        <option value="50">Fast</option>
-                    </select>
-                </span>
-                <span id="currentDate" class="current-date"></span>
-            </div>
-            <div id="raceChart" class="race-chart"></div>
-        </section>
         <section class="stats-overview" id="statsOverview">
             <div class="stat-card">
                 <div class="stat-value" id="totalGames">--</div>
@@ -490,6 +460,7 @@ footer a:hover {
                         <th>Losses</th>
                         <th>Games</th>
                         <th>Win Rate</th>
+                        <th>Last Win</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboardBody">
@@ -8481,12 +8452,10 @@ footer a:hover {
 };
 
         let gamesData = null;
-        let raceTimeline = [];
-        let raceCurrentFrame = 0;
-        let raceAnimationId = null;
 
         async function loadData() {
             try {
+                // Embedded data
                 const response = { ok: true, json: async () => EMBEDDED_DATA };
                 if (!response.ok) {
                     throw new Error('Could not load data.json - run fetch-games.py first');
@@ -8524,6 +8493,13 @@ footer a:hover {
                 : 0;
             document.getElementById('avgTurns').textContent = avgTurns;
 
+            // Update total games to show finished count
+            document.getElementById('totalGames').textContent = finishedGames.length;
+            const inProgress = gamesData.games.filter(g => g.state !== 'Finished').length;
+            if (inProgress > 0) {
+                document.getElementById('totalGames').textContent += ` (${inProgress} in progress)`;
+            }
+
             // Leaderboard
             renderLeaderboard();
 
@@ -8534,10 +8510,21 @@ footer a:hover {
             renderGames(gamesData.games);
 
             // Event listeners
-            buildRaceTimeline();
-            renderRaceChart(0);
             setupEventListeners();
-            setupRaceControls();
+        }
+
+        function findLastWin(playerName) {
+            let lastWinDate = null;
+            gamesData.games.filter(g => g.state === 'Finished').forEach(game => {
+                const player = game.players.find(p => p.name === playerName);
+                if (player && player.state === 'Won' && game.created) {
+                    const gameDate = new Date(game.created);
+                    if (!lastWinDate || gameDate > lastWinDate) {
+                        lastWinDate = gameDate;
+                    }
+                }
+            });
+            return lastWinDate;
         }
 
         function renderLeaderboard() {
@@ -8553,6 +8540,12 @@ footer a:hover {
             tbody.innerHTML = sorted.map((player, idx) => {
                 const winRate = player.games > 0 ? (player.wins / player.games * 100).toFixed(1) : 0;
                 const rankClass = idx < 3 ? `rank-${idx + 1}` : '';
+
+                const lastWin = findLastWin(player.name);
+                const lastWinText = lastWin
+                    ? lastWin.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    : 'Never';
+
                 return `
                     <tr class="${rankClass}">
                         <td class="rank">${idx + 1}</td>
@@ -8561,6 +8554,7 @@ footer a:hover {
                         <td class="losses">${player.losses}</td>
                         <td>${player.games}</td>
                         <td>${winRate}%</td>
+                        <td class="last-win">${lastWinText}</td>
                     </tr>
                 `;
             }).join('');
@@ -8716,156 +8710,6 @@ footer a:hover {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        function buildRaceTimeline() {
-            const sortedGames = [...gamesData.games]
-                .filter(g => g.state === 'Finished' && g.created)
-                .sort((a, b) => new Date(a.created) - new Date(b.created));
-
-            if (sortedGames.length === 0) {
-                raceTimeline = [];
-                return;
-            }
-
-            const playerWins = {};
-            raceTimeline = [];
-
-            sortedGames.forEach(game => {
-                game.players.forEach(player => {
-                    if (!playerWins[player.name]) {
-                        playerWins[player.name] = 0;
-                    }
-                    if (player.state === 'Won') {
-                        playerWins[player.name]++;
-                    }
-                });
-
-                raceTimeline.push({
-                    date: new Date(game.created),
-                    standings: { ...playerWins }
-                });
-            });
-        }
-
-        function renderRaceChart(frameIndex) {
-            const container = document.getElementById('raceChart');
-            const currentDate = document.getElementById('currentDate');
-
-            if (raceTimeline.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#aaa">No game history available</p>';
-                return;
-            }
-
-            const frame = raceTimeline[frameIndex];
-            currentDate.textContent = frame.date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            }) + ` (Game ${frameIndex + 1}/${raceTimeline.length})`;
-
-            const sorted = Object.entries(frame.standings)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10);
-
-            const maxWins = sorted[0]?.[1] || 1;
-            const ROW_HEIGHT = 43;
-
-            // Get existing bars
-            const existingBars = new Map();
-            container.querySelectorAll('.race-bar-container').forEach(bar => {
-                existingBars.set(bar.dataset.player, bar);
-            });
-
-            // Update or create bars
-            sorted.forEach(([player, wins], targetIndex) => {
-                const width = Math.max(1, (wins / maxWins * 100));
-                const targetY = targetIndex * ROW_HEIGHT;
-                let barContainer = existingBars.get(player);
-
-                if (!barContainer) {
-                    barContainer = document.createElement('div');
-                    barContainer.className = 'race-bar-container';
-                    barContainer.dataset.player = player;
-                    barContainer.style.transform = `translateY(${targetY}px)`;
-                    barContainer.innerHTML = `
-                        <div class="race-player-name">${player}</div>
-                        <div class="race-bar-wrapper">
-                            <div class="race-bar" style="width: 1%">
-                                <span class="race-bar-value">0</span>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(barContainer);
-                }
-
-                // Update bar width and value
-                const bar = barContainer.querySelector('.race-bar');
-                const value = barContainer.querySelector('.race-bar-value');
-                bar.style.width = width + '%';
-                value.textContent = wins;
-
-                // Animate to new position
-                barContainer.style.transform = `translateY(${targetY}px)`;
-
-                existingBars.delete(player);
-            });
-
-            // Remove bars no longer in top 10
-            existingBars.forEach(bar => bar.remove());
-        }
-
-        function setupRaceControls() {
-            const playBtn = document.getElementById('playBtn');
-            const pauseBtn = document.getElementById('pauseBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const speedSelect = document.getElementById('speedSelect');
-
-            playBtn.addEventListener('click', () => {
-                if (raceAnimationId) return;
-
-                raceAnimationId = setInterval(() => {
-                    raceCurrentFrame++;
-                    if (raceCurrentFrame >= raceTimeline.length) {
-                        raceCurrentFrame = raceTimeline.length - 1;
-                        clearInterval(raceAnimationId);
-                        raceAnimationId = null;
-                    }
-                    renderRaceChart(raceCurrentFrame);
-                }, parseInt(speedSelect.value));
-            });
-
-            pauseBtn.addEventListener('click', () => {
-                if (raceAnimationId) {
-                    clearInterval(raceAnimationId);
-                    raceAnimationId = null;
-                }
-            });
-
-            resetBtn.addEventListener('click', () => {
-                if (raceAnimationId) {
-                    clearInterval(raceAnimationId);
-                    raceAnimationId = null;
-                }
-                raceCurrentFrame = 0;
-                renderRaceChart(0);
-            });
-
-            speedSelect.addEventListener('change', (e) => {
-                const newSpeed = parseInt(e.target.value);
-                if (raceAnimationId) {
-                    clearInterval(raceAnimationId);
-                    raceAnimationId = setInterval(() => {
-                        raceCurrentFrame++;
-                        if (raceCurrentFrame >= raceTimeline.length) {
-                            raceCurrentFrame = raceTimeline.length - 1;
-                            clearInterval(raceAnimationId);
-                            raceAnimationId = null;
-                        }
-                        renderRaceChart(raceCurrentFrame);
-                    }, newSpeed);
-                }
-            });
         }
 
         // Load data on page load

@@ -161,6 +161,11 @@ tr:hover {
     color: var(--accent);
 }
 
+.last-win {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
 /* Head-to-Head */
 .h2h-controls {
     margin-bottom: 20px;
